@@ -1,0 +1,1134 @@
+	.text
+	.file	"calc.c"
+	.align	16, 0x90
+	.type	process_thread_calc_process,@function
+process_thread_calc_process:            # @process_thread_calc_process
+	.cfi_startproc
+# BB#0:
+	pushq	%rbp
+.Ltmp0:
+	.cfi_def_cfa_offset 16
+.Ltmp1:
+	.cfi_offset %rbp, -16
+	movq	%rsp, %rbp
+.Ltmp2:
+	.cfi_def_cfa_register %rbp
+	subq	$48, %rsp
+	movb	%sil, %al
+	movq	%rdi, -16(%rbp)
+	movb	%al, -17(%rbp)
+	movq	%rdx, -32(%rbp)
+	movb	$1, -33(%rbp)
+	cmpb	$0, -33(%rbp)
+	je	.LBB0_2
+# BB#1:
+	jmp	.LBB0_2
+.LBB0_2:
+	movq	-16(%rbp), %rax
+	movzwl	(%rax), %ecx
+	movl	%ecx, %edx
+	subl	$224, %edx
+	movl	%ecx, -40(%rbp)         # 4-byte Spill
+	movl	%edx, -44(%rbp)         # 4-byte Spill
+	je	.LBB0_6
+	jmp	.LBB0_90
+.LBB0_90:
+	movl	-40(%rbp), %eax         # 4-byte Reload
+	testl	%eax, %eax
+	jne	.LBB0_88
+	jmp	.LBB0_3
+.LBB0_3:
+	movabsq	$window, %rdi
+	movl	$12, %esi
+	movl	$7, %edx
+	movabsq	$.L.str1, %rcx
+	callq	ctk_window_new
+	movabsq	$window, %rdi
+	movabsq	$inputlabel, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$cbutton, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$divbutton, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$button7, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$button8, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$button9, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$mulbutton, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$button4, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$button5, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$button6, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$subbutton, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$button1, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$button2, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$button3, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$addbutton, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$button0, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	movabsq	$window, %rdi
+	movabsq	$calcbutton, %rcx
+	movq	%rcx, %rsi
+	callq	ctk_widget_add
+	callq	clear_input
+	movabsq	$window, %rdi
+	callq	ctk_window_open
+.LBB0_4:
+	jmp	.LBB0_5
+.LBB0_5:
+	movb	$0, -33(%rbp)
+	movq	-16(%rbp), %rax
+	movw	$224, (%rax)
+.LBB0_6:
+	movsbl	-33(%rbp), %eax
+	cmpl	$0, %eax
+	jne	.LBB0_8
+# BB#7:
+	movb	$1, -1(%rbp)
+	jmp	.LBB0_89
+.LBB0_8:
+	jmp	.LBB0_9
+.LBB0_9:
+	movzbl	-17(%rbp), %eax
+	movzbl	ctk_signal_keypress, %ecx
+	cmpl	%ecx, %eax
+	jne	.LBB0_33
+# BB#10:
+	movq	-32(%rbp), %rax
+	movb	%al, %cl
+	movsbl	%cl, %edx
+	cmpl	$48, %edx
+	jl	.LBB0_13
+# BB#11:
+	movq	-32(%rbp), %rax
+	movb	%al, %cl
+	movsbl	%cl, %edx
+	cmpl	$57, %edx
+	jg	.LBB0_13
+# BB#12:
+	movq	-32(%rbp), %rax
+	movb	%al, %cl
+	movsbl	%cl, %edi
+	callq	add_to_input
+	jmp	.LBB0_32
+.LBB0_13:
+	movq	-32(%rbp), %rax
+	movb	%al, %cl
+	movsbl	%cl, %edx
+	cmpl	$32, %edx
+	jne	.LBB0_15
+# BB#14:
+	callq	clear_input
+	jmp	.LBB0_31
+.LBB0_15:
+	movq	-32(%rbp), %rax
+	movb	%al, %cl
+	movsbl	%cl, %edx
+	cmpl	$43, %edx
+	jne	.LBB0_17
+# BB#16:
+	callq	input_to_operand1
+	movb	$1, op
+	jmp	.LBB0_30
+.LBB0_17:
+	movq	-32(%rbp), %rax
+	movb	%al, %cl
+	movsbl	%cl, %edx
+	cmpl	$45, %edx
+	jne	.LBB0_19
+# BB#18:
+	callq	input_to_operand1
+	movb	$2, op
+	jmp	.LBB0_29
+.LBB0_19:
+	movq	-32(%rbp), %rax
+	movb	%al, %cl
+	movsbl	%cl, %edx
+	cmpl	$42, %edx
+	jne	.LBB0_21
+# BB#20:
+	callq	input_to_operand1
+	movb	$3, op
+	jmp	.LBB0_28
+.LBB0_21:
+	movq	-32(%rbp), %rax
+	movb	%al, %cl
+	movsbl	%cl, %edx
+	cmpl	$47, %edx
+	jne	.LBB0_23
+# BB#22:
+	callq	input_to_operand1
+	movb	$4, op
+	jmp	.LBB0_27
+.LBB0_23:
+	movq	-32(%rbp), %rax
+	movb	%al, %cl
+	movsbl	%cl, %edx
+	cmpl	$61, %edx
+	je	.LBB0_25
+# BB#24:
+	movq	-32(%rbp), %rax
+	movb	%al, %cl
+	movsbl	%cl, %edx
+	cmpl	$10, %edx
+	jne	.LBB0_26
+.LBB0_25:
+	callq	calculate
+.LBB0_26:
+	jmp	.LBB0_27
+.LBB0_27:
+	jmp	.LBB0_28
+.LBB0_28:
+	jmp	.LBB0_29
+.LBB0_29:
+	jmp	.LBB0_30
+.LBB0_30:
+	jmp	.LBB0_31
+.LBB0_31:
+	jmp	.LBB0_32
+.LBB0_32:
+	movabsq	$inputlabel, %rax
+	movq	%rax, %rdi
+	callq	ctk_widget_redraw
+	jmp	.LBB0_87
+.LBB0_33:
+	movzbl	-17(%rbp), %eax
+	movzbl	ctk_signal_button_activate, %ecx
+	cmpl	%ecx, %eax
+	jne	.LBB0_82
+# BB#34:
+	movabsq	$button0, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_36
+# BB#35:
+	movl	$48, %edi
+	callq	add_to_input
+	jmp	.LBB0_81
+.LBB0_36:
+	movabsq	$button1, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_38
+# BB#37:
+	movl	$49, %edi
+	callq	add_to_input
+	jmp	.LBB0_80
+.LBB0_38:
+	movabsq	$button2, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_40
+# BB#39:
+	movl	$50, %edi
+	callq	add_to_input
+	jmp	.LBB0_79
+.LBB0_40:
+	movabsq	$button3, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_42
+# BB#41:
+	movl	$51, %edi
+	callq	add_to_input
+	jmp	.LBB0_78
+.LBB0_42:
+	movabsq	$button4, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_44
+# BB#43:
+	movl	$52, %edi
+	callq	add_to_input
+	jmp	.LBB0_77
+.LBB0_44:
+	movabsq	$button5, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_46
+# BB#45:
+	movl	$53, %edi
+	callq	add_to_input
+	jmp	.LBB0_76
+.LBB0_46:
+	movabsq	$button6, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_48
+# BB#47:
+	movl	$54, %edi
+	callq	add_to_input
+	jmp	.LBB0_75
+.LBB0_48:
+	movabsq	$button7, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_50
+# BB#49:
+	movl	$55, %edi
+	callq	add_to_input
+	jmp	.LBB0_74
+.LBB0_50:
+	movabsq	$button8, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_52
+# BB#51:
+	movl	$56, %edi
+	callq	add_to_input
+	jmp	.LBB0_73
+.LBB0_52:
+	movabsq	$button9, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_54
+# BB#53:
+	movl	$57, %edi
+	callq	add_to_input
+	jmp	.LBB0_72
+.LBB0_54:
+	movabsq	$cbutton, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_56
+# BB#55:
+	callq	clear_input
+	jmp	.LBB0_71
+.LBB0_56:
+	movabsq	$calcbutton, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_58
+# BB#57:
+	callq	calculate
+	jmp	.LBB0_70
+.LBB0_58:
+	movabsq	$addbutton, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_60
+# BB#59:
+	callq	input_to_operand1
+	movb	$1, op
+	jmp	.LBB0_69
+.LBB0_60:
+	movabsq	$subbutton, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_62
+# BB#61:
+	callq	input_to_operand1
+	movb	$2, op
+	jmp	.LBB0_68
+.LBB0_62:
+	movabsq	$mulbutton, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_64
+# BB#63:
+	callq	input_to_operand1
+	movb	$3, op
+	jmp	.LBB0_67
+.LBB0_64:
+	movabsq	$divbutton, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_66
+# BB#65:
+	callq	input_to_operand1
+	movb	$4, op
+.LBB0_66:
+	jmp	.LBB0_67
+.LBB0_67:
+	jmp	.LBB0_68
+.LBB0_68:
+	jmp	.LBB0_69
+.LBB0_69:
+	jmp	.LBB0_70
+.LBB0_70:
+	jmp	.LBB0_71
+.LBB0_71:
+	jmp	.LBB0_72
+.LBB0_72:
+	jmp	.LBB0_73
+.LBB0_73:
+	jmp	.LBB0_74
+.LBB0_74:
+	jmp	.LBB0_75
+.LBB0_75:
+	jmp	.LBB0_76
+.LBB0_76:
+	jmp	.LBB0_77
+.LBB0_77:
+	jmp	.LBB0_78
+.LBB0_78:
+	jmp	.LBB0_79
+.LBB0_79:
+	jmp	.LBB0_80
+.LBB0_80:
+	jmp	.LBB0_81
+.LBB0_81:
+	movabsq	$inputlabel, %rax
+	movq	%rax, %rdi
+	callq	ctk_widget_redraw
+	jmp	.LBB0_86
+.LBB0_82:
+	movzbl	-17(%rbp), %eax
+	movzbl	ctk_signal_window_close, %ecx
+	cmpl	%ecx, %eax
+	jne	.LBB0_85
+# BB#83:
+	movabsq	$window, %rax
+	cmpq	%rax, -32(%rbp)
+	jne	.LBB0_85
+# BB#84:
+	callq	calc_quit
+.LBB0_85:
+	jmp	.LBB0_86
+.LBB0_86:
+	jmp	.LBB0_87
+.LBB0_87:
+	jmp	.LBB0_4
+.LBB0_88:
+	movb	$0, -33(%rbp)
+	movq	-16(%rbp), %rax
+	movw	$0, (%rax)
+	movb	$3, -1(%rbp)
+.LBB0_89:
+	movsbl	-1(%rbp), %eax
+	addq	$48, %rsp
+	popq	%rbp
+	retq
+.Ltmp3:
+	.size	process_thread_calc_process, .Ltmp3-process_thread_calc_process
+	.cfi_endproc
+
+	.align	16, 0x90
+	.type	clear_input,@function
+clear_input:                            # @clear_input
+	.cfi_startproc
+# BB#0:
+	pushq	%rbp
+.Ltmp4:
+	.cfi_def_cfa_offset 16
+.Ltmp5:
+	.cfi_offset %rbp, -16
+	movq	%rsp, %rbp
+.Ltmp6:
+	.cfi_def_cfa_register %rbp
+	movb	$0, -1(%rbp)
+.LBB1_1:                                # =>This Inner Loop Header: Depth=1
+	movzbl	-1(%rbp), %eax
+	movl	%eax, %ecx
+	cmpq	$16, %rcx
+	jae	.LBB1_4
+# BB#2:                                 #   in Loop: Header=BB1_1 Depth=1
+	movzbl	-1(%rbp), %eax
+	movl	%eax, %ecx
+	movb	$32, input(,%rcx)
+# BB#3:                                 #   in Loop: Header=BB1_1 Depth=1
+	movb	-1(%rbp), %al
+	addb	$1, %al
+	movb	%al, -1(%rbp)
+	jmp	.LBB1_1
+.LBB1_4:
+	popq	%rbp
+	retq
+.Ltmp7:
+	.size	clear_input, .Ltmp7-clear_input
+	.cfi_endproc
+
+	.align	16, 0x90
+	.type	add_to_input,@function
+add_to_input:                           # @add_to_input
+	.cfi_startproc
+# BB#0:
+	pushq	%rbp
+.Ltmp8:
+	.cfi_def_cfa_offset 16
+.Ltmp9:
+	.cfi_offset %rbp, -16
+	movq	%rsp, %rbp
+.Ltmp10:
+	.cfi_def_cfa_register %rbp
+	movb	%dil, %al
+	movb	%al, -1(%rbp)
+	movb	$0, -2(%rbp)
+.LBB2_1:                                # =>This Inner Loop Header: Depth=1
+	movzbl	-2(%rbp), %eax
+	cmpl	$11, %eax
+	jge	.LBB2_4
+# BB#2:                                 #   in Loop: Header=BB2_1 Depth=1
+	movzbl	-2(%rbp), %eax
+	addl	$1, %eax
+	movslq	%eax, %rcx
+	movb	input(,%rcx), %dl
+	movzbl	-2(%rbp), %eax
+	movl	%eax, %ecx
+	movb	%dl, input(,%rcx)
+# BB#3:                                 #   in Loop: Header=BB2_1 Depth=1
+	movb	-2(%rbp), %al
+	addb	$1, %al
+	movb	%al, -2(%rbp)
+	jmp	.LBB2_1
+.LBB2_4:
+	movb	-1(%rbp), %al
+	movb	%al, input+11
+	popq	%rbp
+	retq
+.Ltmp11:
+	.size	add_to_input, .Ltmp11-add_to_input
+	.cfi_endproc
+
+	.align	16, 0x90
+	.type	input_to_operand1,@function
+input_to_operand1:                      # @input_to_operand1
+	.cfi_startproc
+# BB#0:
+	pushq	%rbp
+.Ltmp12:
+	.cfi_def_cfa_offset 16
+.Ltmp13:
+	.cfi_offset %rbp, -16
+	movq	%rsp, %rbp
+.Ltmp14:
+	.cfi_def_cfa_register %rbp
+	subq	$16, %rsp
+	movq	$0, operand1
+	movl	$1, -4(%rbp)
+	movb	$11, -5(%rbp)
+.LBB3_1:                                # =>This Inner Loop Header: Depth=1
+	movzbl	-5(%rbp), %eax
+	cmpl	$7, %eax
+	jle	.LBB3_7
+# BB#2:                                 #   in Loop: Header=BB3_1 Depth=1
+	movzbl	-5(%rbp), %eax
+	movl	%eax, %ecx
+	movsbl	input(,%rcx), %eax
+	cmpl	$48, %eax
+	jl	.LBB3_5
+# BB#3:                                 #   in Loop: Header=BB3_1 Depth=1
+	movzbl	-5(%rbp), %eax
+	movl	%eax, %ecx
+	movsbl	input(,%rcx), %eax
+	cmpl	$57, %eax
+	jg	.LBB3_5
+# BB#4:                                 #   in Loop: Header=BB3_1 Depth=1
+	movzbl	-5(%rbp), %eax
+	movl	%eax, %ecx
+	movsbl	input(,%rcx), %eax
+	subl	$48, %eax
+	imull	-4(%rbp), %eax
+	movl	%eax, %eax
+	movl	%eax, %ecx
+	movq	operand1, %rdx
+	addq	%rcx, %rdx
+	movq	%rdx, operand1
+.LBB3_5:                                #   in Loop: Header=BB3_1 Depth=1
+	jmp	.LBB3_6
+.LBB3_6:                                #   in Loop: Header=BB3_1 Depth=1
+	movb	-5(%rbp), %al
+	addb	$255, %al
+	movb	%al, -5(%rbp)
+	imull	$10, -4(%rbp), %ecx
+	movl	%ecx, -4(%rbp)
+	jmp	.LBB3_1
+.LBB3_7:
+	callq	clear_input
+	addq	$16, %rsp
+	popq	%rbp
+	retq
+.Ltmp15:
+	.size	input_to_operand1, .Ltmp15-input_to_operand1
+	.cfi_endproc
+
+	.align	16, 0x90
+	.type	calculate,@function
+calculate:                              # @calculate
+	.cfi_startproc
+# BB#0:
+	pushq	%rbp
+.Ltmp16:
+	.cfi_def_cfa_offset 16
+.Ltmp17:
+	.cfi_offset %rbp, -16
+	movq	%rsp, %rbp
+.Ltmp18:
+	.cfi_def_cfa_register %rbp
+	subq	$16, %rsp
+	movq	operand1(%rip), %rax
+	movq	%rax, operand2(%rip)
+	callq	input_to_operand1
+	movzbl	op(%rip), %ecx
+	decl	%ecx
+	movl	%ecx, %eax
+	subl	$3, %ecx
+	movq	%rax, -8(%rbp)          # 8-byte Spill
+	movl	%ecx, -12(%rbp)         # 4-byte Spill
+	ja	.LBB4_5
+# BB#6:
+	movq	-8(%rbp), %rax          # 8-byte Reload
+	movq	.LJTI4_0(,%rax,8), %rcx
+	jmpq	*%rcx
+.LBB4_1:
+	movq	operand2, %rax
+	addq	operand1, %rax
+	movq	%rax, operand2
+	jmp	.LBB4_5
+.LBB4_2:
+	movq	operand2, %rax
+	subq	operand1, %rax
+	movq	%rax, operand2
+	jmp	.LBB4_5
+.LBB4_3:
+	movq	operand2, %rax
+	imulq	operand1, %rax
+	movq	%rax, operand2
+	jmp	.LBB4_5
+.LBB4_4:
+	movq	operand2, %rax
+	xorl	%ecx, %ecx
+	movl	%ecx, %edx
+	divq	operand1
+	movq	%rax, operand2
+.LBB4_5:
+	callq	operand2_to_input
+	addq	$16, %rsp
+	popq	%rbp
+	retq
+.Ltmp19:
+	.size	calculate, .Ltmp19-calculate
+	.cfi_endproc
+	.section	.rodata,"a",@progbits
+	.align	8
+.LJTI4_0:
+	.quad	.LBB4_1
+	.quad	.LBB4_2
+	.quad	.LBB4_3
+	.quad	.LBB4_4
+
+	.text
+	.align	16, 0x90
+	.type	calc_quit,@function
+calc_quit:                              # @calc_quit
+	.cfi_startproc
+# BB#0:
+	pushq	%rbp
+.Ltmp20:
+	.cfi_def_cfa_offset 16
+.Ltmp21:
+	.cfi_offset %rbp, -16
+	movq	%rsp, %rbp
+.Ltmp22:
+	.cfi_def_cfa_register %rbp
+	movabsq	$calc_process, %rax
+	movq	%rax, %rdi
+	callq	process_exit
+	popq	%rbp
+	retq
+.Ltmp23:
+	.size	calc_quit, .Ltmp23-calc_quit
+	.cfi_endproc
+
+	.align	16, 0x90
+	.type	operand2_to_input,@function
+operand2_to_input:                      # @operand2_to_input
+	.cfi_startproc
+# BB#0:
+	pushq	%rbp
+.Ltmp24:
+	.cfi_def_cfa_offset 16
+.Ltmp25:
+	.cfi_offset %rbp, -16
+	movq	%rsp, %rbp
+.Ltmp26:
+	.cfi_def_cfa_register %rbp
+	movabsq	$10, %rax
+	movabsq	$100, %rcx
+	movabsq	$1000, %rdx             # imm = 0x3E8
+	movabsq	$10000, %rsi            # imm = 0x2710
+	movq	operand2, %rdi
+	movq	%rax, -16(%rbp)         # 8-byte Spill
+	movq	%rdi, %rax
+	xorl	%r8d, %r8d
+	movq	%rdx, -24(%rbp)         # 8-byte Spill
+	movl	%r8d, %edx
+	divq	%rsi
+	xorl	%r8d, %r8d
+	movl	%r8d, %edx
+	movq	-16(%rbp), %rsi         # 8-byte Reload
+	divq	%rsi
+	movb	%dl, %r9b
+	movsbl	%r9b, %r8d
+	addl	$48, %r8d
+	movb	%r8b, %r9b
+	movb	%r9b, input+7
+	movq	operand2, %rax
+	xorl	%r8d, %r8d
+	movl	%r8d, %edx
+	movq	-24(%rbp), %rdi         # 8-byte Reload
+	divq	%rdi
+	xorl	%r8d, %r8d
+	movl	%r8d, %edx
+	divq	%rsi
+	movb	%dl, %r9b
+	movsbl	%r9b, %r8d
+	addl	$48, %r8d
+	movb	%r8b, %r9b
+	movb	%r9b, input+8
+	movq	operand2, %rax
+	xorl	%r8d, %r8d
+	movl	%r8d, %edx
+	divq	%rcx
+	xorl	%r8d, %r8d
+	movl	%r8d, %edx
+	divq	%rsi
+	movb	%dl, %r9b
+	movsbl	%r9b, %r8d
+	addl	$48, %r8d
+	movb	%r8b, %r9b
+	movb	%r9b, input+9
+	movq	operand2, %rax
+	xorl	%r8d, %r8d
+	movl	%r8d, %edx
+	divq	%rsi
+	xorl	%r8d, %r8d
+	movl	%r8d, %edx
+	divq	%rsi
+	movb	%dl, %r9b
+	movsbl	%r9b, %r8d
+	addl	$48, %r8d
+	movb	%r8b, %r9b
+	movb	%r9b, input+10
+	movq	operand2, %rax
+	xorl	%r8d, %r8d
+	movl	%r8d, %edx
+	divq	%rsi
+	movb	%dl, %r9b
+	movsbl	%r9b, %r8d
+	addl	$48, %r8d
+	movb	%r8b, %r9b
+	movb	%r9b, input+11
+	movb	$0, -1(%rbp)
+.LBB6_1:                                # =>This Inner Loop Header: Depth=1
+	movzbl	-1(%rbp), %eax
+	cmpl	$4, %eax
+	jge	.LBB6_7
+# BB#2:                                 #   in Loop: Header=BB6_1 Depth=1
+	movzbl	-1(%rbp), %eax
+	addl	$7, %eax
+	movslq	%eax, %rcx
+	movsbl	input(,%rcx), %eax
+	cmpl	$48, %eax
+	jne	.LBB6_4
+# BB#3:                                 #   in Loop: Header=BB6_1 Depth=1
+	movzbl	-1(%rbp), %eax
+	addl	$7, %eax
+	movslq	%eax, %rcx
+	movb	$32, input(,%rcx)
+	jmp	.LBB6_5
+.LBB6_4:
+	jmp	.LBB6_7
+.LBB6_5:                                #   in Loop: Header=BB6_1 Depth=1
+	jmp	.LBB6_6
+.LBB6_6:                                #   in Loop: Header=BB6_1 Depth=1
+	movb	-1(%rbp), %al
+	addb	$1, %al
+	movb	%al, -1(%rbp)
+	jmp	.LBB6_1
+.LBB6_7:
+	popq	%rbp
+	retq
+.Ltmp27:
+	.size	operand2_to_input, .Ltmp27-operand2_to_input
+	.cfi_endproc
+
+	.type	.L.str,@object          # @.str
+	.section	.rodata.str1.1,"aMS",@progbits,1
+.L.str:
+	.asciz	"Calculator"
+	.size	.L.str, 11
+
+	.type	calc_process,@object    # @calc_process
+	.data
+	.globl	calc_process
+	.align	8
+calc_process:
+	.quad	0
+	.quad	.L.str
+	.quad	process_thread_calc_process
+	.zero	2
+	.byte	0                       # 0x0
+	.byte	0                       # 0x0
+	.zero	4
+	.size	calc_process, 32
+
+	.type	window,@object          # @window
+	.local	window
+	.comm	window,144,8
+	.type	.L.str1,@object         # @.str1
+	.section	.rodata.str1.1,"aMS",@progbits,1
+.L.str1:
+	.asciz	"Calc"
+	.size	.L.str1, 5
+
+	.type	inputlabel,@object      # @inputlabel
+	.data
+	.align	8
+inputlabel:
+	.quad	0
+	.quad	0
+	.byte	0                       # 0x0
+	.byte	0                       # 0x0
+	.byte	2                       # 0x2
+	.byte	12                      # 0xc
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	input
+	.size	inputlabel, 32
+
+	.type	cbutton,@object         # @cbutton
+	.align	8
+cbutton:
+	.quad	0
+	.quad	0
+	.byte	0                       # 0x0
+	.byte	2                       # 0x2
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str17
+	.size	cbutton, 32
+
+	.type	divbutton,@object       # @divbutton
+	.align	8
+divbutton:
+	.quad	0
+	.quad	0
+	.byte	9                       # 0x9
+	.byte	2                       # 0x2
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str16
+	.size	divbutton, 32
+
+	.type	button7,@object         # @button7
+	.align	8
+button7:
+	.quad	0
+	.quad	0
+	.byte	0                       # 0x0
+	.byte	3                       # 0x3
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str15
+	.size	button7, 32
+
+	.type	button8,@object         # @button8
+	.align	8
+button8:
+	.quad	0
+	.quad	0
+	.byte	3                       # 0x3
+	.byte	3                       # 0x3
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str14
+	.size	button8, 32
+
+	.type	button9,@object         # @button9
+	.align	8
+button9:
+	.quad	0
+	.quad	0
+	.byte	6                       # 0x6
+	.byte	3                       # 0x3
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str13
+	.size	button9, 32
+
+	.type	mulbutton,@object       # @mulbutton
+	.align	8
+mulbutton:
+	.quad	0
+	.quad	0
+	.byte	9                       # 0x9
+	.byte	3                       # 0x3
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str12
+	.size	mulbutton, 32
+
+	.type	button4,@object         # @button4
+	.align	8
+button4:
+	.quad	0
+	.quad	0
+	.byte	0                       # 0x0
+	.byte	4                       # 0x4
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str11
+	.size	button4, 32
+
+	.type	button5,@object         # @button5
+	.align	8
+button5:
+	.quad	0
+	.quad	0
+	.byte	3                       # 0x3
+	.byte	4                       # 0x4
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str10
+	.size	button5, 32
+
+	.type	button6,@object         # @button6
+	.align	8
+button6:
+	.quad	0
+	.quad	0
+	.byte	6                       # 0x6
+	.byte	4                       # 0x4
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str9
+	.size	button6, 32
+
+	.type	subbutton,@object       # @subbutton
+	.align	8
+subbutton:
+	.quad	0
+	.quad	0
+	.byte	9                       # 0x9
+	.byte	4                       # 0x4
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str8
+	.size	subbutton, 32
+
+	.type	button1,@object         # @button1
+	.align	8
+button1:
+	.quad	0
+	.quad	0
+	.byte	0                       # 0x0
+	.byte	5                       # 0x5
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str7
+	.size	button1, 32
+
+	.type	button2,@object         # @button2
+	.align	8
+button2:
+	.quad	0
+	.quad	0
+	.byte	3                       # 0x3
+	.byte	5                       # 0x5
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str6
+	.size	button2, 32
+
+	.type	button3,@object         # @button3
+	.align	8
+button3:
+	.quad	0
+	.quad	0
+	.byte	6                       # 0x6
+	.byte	5                       # 0x5
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str5
+	.size	button3, 32
+
+	.type	addbutton,@object       # @addbutton
+	.align	8
+addbutton:
+	.quad	0
+	.quad	0
+	.byte	9                       # 0x9
+	.byte	5                       # 0x5
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str4
+	.size	addbutton, 32
+
+	.type	button0,@object         # @button0
+	.align	8
+button0:
+	.quad	0
+	.quad	0
+	.byte	0                       # 0x0
+	.byte	6                       # 0x6
+	.byte	3                       # 0x3
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str3
+	.size	button0, 32
+
+	.type	calcbutton,@object      # @calcbutton
+	.align	8
+calcbutton:
+	.quad	0
+	.quad	0
+	.byte	9                       # 0x9
+	.byte	6                       # 0x6
+	.byte	3                       # 0x3
+	.byte	1                       # 0x1
+	.byte	1                       # 0x1
+	.zero	3
+	.quad	.L.str2
+	.size	calcbutton, 32
+
+	.type	op,@object              # @op
+	.local	op
+	.comm	op,1,1
+	.type	operand1,@object        # @operand1
+	.local	operand1
+	.comm	operand1,8,8
+	.type	operand2,@object        # @operand2
+	.local	operand2
+	.comm	operand2,8,8
+	.type	input,@object           # @input
+	.local	input
+	.comm	input,16,16
+	.type	.L.str2,@object         # @.str2
+	.section	.rodata.str1.1,"aMS",@progbits,1
+.L.str2:
+	.asciz	"="
+	.size	.L.str2, 2
+
+	.type	.L.str3,@object         # @.str3
+.L.str3:
+	.asciz	" 0 "
+	.size	.L.str3, 4
+
+	.type	.L.str4,@object         # @.str4
+.L.str4:
+	.asciz	"+"
+	.size	.L.str4, 2
+
+	.type	.L.str5,@object         # @.str5
+.L.str5:
+	.asciz	"3"
+	.size	.L.str5, 2
+
+	.type	.L.str6,@object         # @.str6
+.L.str6:
+	.asciz	"2"
+	.size	.L.str6, 2
+
+	.type	.L.str7,@object         # @.str7
+.L.str7:
+	.asciz	"1"
+	.size	.L.str7, 2
+
+	.type	.L.str8,@object         # @.str8
+.L.str8:
+	.asciz	"-"
+	.size	.L.str8, 2
+
+	.type	.L.str9,@object         # @.str9
+.L.str9:
+	.asciz	"6"
+	.size	.L.str9, 2
+
+	.type	.L.str10,@object        # @.str10
+.L.str10:
+	.asciz	"5"
+	.size	.L.str10, 2
+
+	.type	.L.str11,@object        # @.str11
+.L.str11:
+	.asciz	"4"
+	.size	.L.str11, 2
+
+	.type	.L.str12,@object        # @.str12
+.L.str12:
+	.asciz	"*"
+	.size	.L.str12, 2
+
+	.type	.L.str13,@object        # @.str13
+.L.str13:
+	.asciz	"9"
+	.size	.L.str13, 2
+
+	.type	.L.str14,@object        # @.str14
+.L.str14:
+	.asciz	"8"
+	.size	.L.str14, 2
+
+	.type	.L.str15,@object        # @.str15
+.L.str15:
+	.asciz	"7"
+	.size	.L.str15, 2
+
+	.type	.L.str16,@object        # @.str16
+.L.str16:
+	.asciz	"/"
+	.size	.L.str16, 2
+
+	.type	.L.str17,@object        # @.str17
+.L.str17:
+	.asciz	"C"
+	.size	.L.str17, 2
+
+
+	.ident	"Ubuntu clang version 3.5.2-3ubuntu1 (tags/RELEASE_352/final) (based on LLVM 3.5.2)"
+	.section	".note.GNU-stack","",@progbits
