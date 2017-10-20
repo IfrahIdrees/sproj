@@ -1,0 +1,21 @@
+From 31fc26254c80d900c86b44050a1faa3c3ef0cc8f Mon Sep 17 00:00:00 2001
+From: IfrahIdrees <18100205@lums.edu.pk>
+Date: Fri, 20 Oct 2017 10:23:38 -0400
+Subject: ad
+
+---
+ contiki-master | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 160000 contiki-master
+
+diff --git a/contiki-master b/contiki-master
+new file mode 160000
+index 0000000000000000000000000000000000000000..7ee99e9102144b5596cfa447e25dcd3baf2b24d0
+--- /dev/null
++++ b/contiki-master
+@@ -0,0 +1 @@
++Subproject commit 7ee99e9102144b5596cfa447e25dcd3baf2b24d0
+-- 
+2.7.4
+
+

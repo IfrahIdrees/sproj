@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 <<<<<<< 98e27a174795a3da3965a3538dfe34b45de8d550
+=======
+>>>>>>> 683e0c1e81cae8b1b7bc209f9cbb7fc2d18ffd9d
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -200,6 +203,7 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+<<<<<<< HEAD
 =======
 <<<<<<< 31fc26254c80d900c86b44050a1faa3c3ef0cc8f
 =======
@@ -273,3 +277,5 @@ For more information, please refer to <https://unlicense.org>
 >>>>>>> f932bbe41237ee3802b7d24409611032d7d911f6
 >>>>>>> pseudsi
 >>>>>>> asdad
+=======
+>>>>>>> 683e0c1e81cae8b1b7bc209f9cbb7fc2d18ffd9d
