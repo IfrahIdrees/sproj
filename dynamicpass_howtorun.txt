@@ -1,0 +1,6 @@
+clang++ -S -emit-llvm count.c -o shit.bc
+clang -S -emit-llvm filename.c -o filename.bc
+opt-3.8 -load DynamicCount/libDynamicCount.so -dynamic filename.bc -o filenameafterpass.bc
+llvm-link-3.8 shit.bc filenameafterpass.bc -o=newfile.bc
+clang++ newfile.bc -o newfile.o -L /usr/lib/x86_64-linux-gnu -lz -lpthread -fno-use-cxa-atexit
+./newfile.o
