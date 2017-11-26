@@ -11,7 +11,7 @@
 #include <iostream>
 #include <vector>
 #include <iterator>
-// #include <set>
+#include <set>
 using namespace llvm;
 
 namespace {
@@ -54,18 +54,21 @@ namespace {
 		int uses = 0;
       for (auto& BB: F){
         for (auto& Inst: BB){
-          auto* I = &Inst;
+		  auto* I = &Inst;
+		  std::set<Value*> live_variable;	
           if (F.getName() == "main" && 
-              checkpoint%inst_cp == 0 &&  
+              checkpoint % inst_cp == 0 &&  
               std::string(I->getOpcodeName()) == "store"){
+			  uses = getNumUses(&*I);
               errs() << "Uses for: " << *I << "\n";
-			  errs() << "Number of uses: " << getNumUses(&*I) << "\n";
-			  if (getNumUses(&*I) > threshold){
+			  errs() << "Number of uses: " << uses << "\n";
+			  if (uses > threshold){
 				  //save
 					errs() << "have to save these\n";
 					std::vector<Instruction*> allUses = getUses(&*I);
 					for (auto i = allUses.end()-1; i != allUses.begin()-1; --i){
 						errs() << **i << "\n";
+						// errs() << *((*i)->getOperand(0)) << "<--------------\n";
 					}
 				}
 			  else{
