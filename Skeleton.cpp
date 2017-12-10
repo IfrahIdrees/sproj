@@ -24,17 +24,12 @@ namespace {
   const int threshold = 3;
   std::vector< Instruction* > saved_stores;
 
-  class states{
+  struct states{
 	std::vector<Instruction*> save;
 	std::vector<Instruction*> compute;
 	std::vector<Instruction*> intermediary;
-	states(std::vector<Instruction *> a, std::vector<Instruction *> b, std::vector<Instruction *> c){
-		//copy input vectors to class vectors
-		//change the following line of code, it doesnt work. iterator equal kar k copy krna parna
-		save = a; compute = b; intermediary = c;
-	}
   };
-   std::map<Instruction*,states> checkpoint_list; 
+   std::map<Instruction*, states> checkpoint_list; 
 	SkeletonPass() : ModulePass(ID) {}
    
 	// void iterate//
@@ -75,11 +70,13 @@ namespace {
 							
 		 		  // std::set<Value*> live_variable; 
 			  		if (F.getName() == "main" && 
-			 		checkpoint % inst_cp == 0){
+					checkpoint % inst_cp == 0){
 						 //at checkpoint
-						 //reverse the instructions
-						std::vector<Instruction*> save, compute, inter;
+
+						std::vector<Instruction*> save, compute, inter; // 3 sets
+						//get all save instructions one by one and perform use-def analysis
 						for (int st = 0; st < saved_stores.size(); st++){
+						
 							Instruction* next_to_save_instr = saved_stores[st];
 							BasicBlock::iterator it1(next_to_save_instr);
 							it1--;
@@ -91,66 +88,57 @@ namespace {
 							else{
 								std::vector<Instruction*> temporary_uses = getUses(save_instr);
 								temporary_uses.push_back(save_instr);
+								//compute set has all the formulas, for each store statement in the format (an example below)
+								//       alloca
+								//       store
+								//       add
+								//       store (the actual store instruction is part of the set)
+
 								compute.insert(compute.end(), std::make_move_iterator(temporary_uses.begin()), std::make_move_iterator(temporary_uses.end()));
 							}
 						}
 						//back track
+						// if store is not on checkpoint, then we go back to last store, and save instruction from then on to the chekcpoint
+						// in an intermediary set
+						// will decide what to do with them later
+						// ONE SOLUTION: perform use def on these
+						// we have the dictionary like
+						// checkpoint_inst -> struct {save, compute , intermediary}
+						// we iterate over intermediary, do use def, and filter instructions. Then we add them to save or compute set of
+						// the same struct accordingly
+
 						if (std::string("store") != I->getOpcodeName()){
 							// std::vector<Instruction*> inter;
 							BasicBlock::iterator it2(saved_stores[saved_stores.size()-1]);
+							BasicBlock::iterator last_inst(Inst);
 							//go till current instruction
-							for (inst_iterator iter = it2; iter != Inst; iter++){
+							for (BasicBlock::iterator iter = it2; iter != last_inst; iter++){
 								inter.push_back(&*iter);
 							}
 						}
 						//fix states constructor
-						states current_checkpoint(save, compute, inter);
+						// states* current_checkpoint = new states(save, compute, iter);
+						states current_checkpoint;
+						current_checkpoint.save = save;
+						current_checkpoint.compute = compute;
+						current_checkpoint.intermediary = inter;
+						//dictionary key to value mapping
+						checkpoint_list[I] = current_checkpoint;
 
-
-						// if(I->getOpcodeName() == std::string("store")){
-						// 	uses = getNumUses(&*I);
-						// 	errs() << "Uses for: " << *I << "\n";
-						// 	errs() << "Number of uses: " << uses << "\n";
-						// 	if (uses > threshold)
-						// 	{
-						// 		//save
-						// 		errs() << "have to save these\n";
-						// 		std::vector<Instruction *> allUses = getUses(&*I);
-						// 		Value *val = dyn_cast<Value>(I->getOperand(0));
-						// 		errs() << *val << "\n";
-						// 	}
-						// 	else
-						// 	{
-						// 		//make formula for recompute
-						// 		std::vector<Instruction *> computeUses = getUses(&*I);
-						// 		computeUses.push_back(&*I);
-						// 		errs() << "have to compute  these\n";
-						// 		errs() << *I << "\n";
-						// 		errs() << "The uses are: \n";
-						// 		for (int a = 0; a < computeUses.size(); a++)
-						// 		{
-						// 			errs() << *computeUses[a] << "\n";
-						// 		}
-						// 	}
-						// }
-						// else{
-						// 	//go back to the last store and save instructions till checkpoint
-						// }   
-		    			
-					uses = 0; 
-				}
-				else if (F.getName() == "main" && checkpoint % inst_cp == 1){
-					saved_stores.clear();
-				}
-				else if (F.getName() == "main" && checkpoint % inst_cp != 0){
-					if (I->getOpcodeName() == std::string("store")){
-						BasicBlock::iterator it(I);
-						++it;
-						if (it != I->getParent()->end()){
-							saved_stores.push_back(&*it);
+						uses = 0; 
+					}
+					else if (F.getName() == "main" && checkpoint % inst_cp == 1){
+						saved_stores.clear();
+					}
+					else if (F.getName() == "main" && checkpoint % inst_cp != 0){
+						if (I->getOpcodeName() == std::string("store")){
+							BasicBlock::iterator it(I);
+							++it;
+							if (it != I->getParent()->end()){
+								saved_stores.push_back(&*it);
+							}
 						}
 					}
-				}
 
 					checkpoint++;
 				}
