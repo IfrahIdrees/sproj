@@ -13,6 +13,8 @@
 #include <vector>
 #include <iterator>
 #include <set>
+#include "llvm/Analysis/LoopPass.h"
+#include "llvm/Analysis/LoopInfo.h"
 #include <map>
 using namespace llvm;
 
@@ -30,7 +32,12 @@ namespace {
       std::vector< std::vector<Instruction*> > compute;
       std::vector<Instruction*> intermediary;
     };
-    std::map<Instruction*, states> checkpoint_list; 
+    std::map<Instruction*, states> checkpoint_list;
+    void getAnalysisUsage(AnalysisUsage &AU) const override
+    {
+      AU.addRequired<LoopInfoWrapperPass>();
+      AU.setPreservesAll();
+    }
     SkeletonPass() : FunctionPass(ID) {}
 
   // void iterate//
@@ -71,7 +78,18 @@ namespace {
       }
       return num_uses;
     }
-
+    int getRealNumUses(int num_uses, std::vector<Instruction*> uses, std::vector<Instruction*> save, std::vector< std::vector<Instruction*> > compute){
+      int u = num_uses;
+      for (int i=0; i<uses.size(); i++){
+        if (inVector(save, uses[i]))
+          u--;
+        for (int j=0; j<compute.size(); j++){
+          if (inVector(compute[j], uses[i]))
+            u--;
+        }
+      }
+      return u;
+    }
     std::vector<Instruction*> getUses(Instruction* I) {
       std::vector<Instruction*> uses ;
       for (Use &U : I->operands()) {
@@ -89,25 +107,49 @@ namespace {
       return uses;
     }
     virtual bool runOnFunction(Function &F) {
-      if (F.getName() != "main")
+      if (F.getName() != std::string("main"))
         return false;
       int uses = 0;
-    // for (auto& F: M){
-        // for (auto& BB: F){
+      std::vector<Instruction *> allLoopInstructions;
+      //take each instruction in a loop and insert into above vector. it will be later used to filter uses which aren't inside a loop.
+      // DO NOT CHANGE THE CODE BELOW
+      if (!F.isDeclaration())
+      {
+        LoopInfo &LI = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
+        LoopInfo::iterator lit = getAnalysis<LoopInfoWrapperPass>().getLoopInfo().begin();
+        LoopInfo::iterator let = getAnalysis<LoopInfoWrapperPass>().getLoopInfo().end();
+        for (; lit != let; ++lit)
+        {
+          Loop *L = *lit;
+          auto allBlocks = L->getBlocks();
+          for (int s = 0; s < allBlocks.size(); s++)
+          {
+            BasicBlock *BB = allBlocks[s];
+            for (BasicBlock::iterator bi = BB->begin(); bi != BB->end(); ++bi)
+            {
+              Instruction *loopInst = &*bi;
+              allLoopInstructions.push_back(&*loopInst);
+            }
+          }
+        }
+      }
+      //DO NOT CHANNGE THE CODE ABOVE
+      // for (auto& F: M){
+      // for (auto& BB: F){
 
-        // errs() << BB.getInstList().size() << "\n";
-          // for (auto& Inst: BB){
+      // errs() << BB.getInstList().size() << "\n";
+      // for (auto& Inst: BB){
       for (inst_iterator Inst = inst_begin(F); Inst != inst_end(F); ++Inst){
         Instruction* I = &*Inst;
         // errs() << checkpoint << "shit: " << I << "\n";;
 
+          std::vector< std::vector<Instruction*> > compute;
+          std::vector<Instruction*> save, inter; // 3 sets
           // std::set<Value*> live_variable; 
         if (std::string(F.getName()) == std::string("main") && 
           checkpoint % inst_cp == 0){
              //at checkpoint
 
-            std::vector<Instruction*> save, inter; // 3 sets
-          std::vector< std::vector<Instruction*> > compute;
             //get all save instructions one by one and perform use-def analysis
           for (int st = 0; st < saved_stores.size(); st++){
 
@@ -116,18 +158,30 @@ namespace {
             it1--;
             Instruction* save_instr = &*it1;
             uses = getNumUses(save_instr);
+            inst_iterator use_iter = Inst;
+            use_iter--;
+            uses = getRealNumUses(uses, getUses(save_instr), checkpoint_list[&*use_iter].save, checkpoint_list[&*use_iter].compute);
             if (uses > threshold){
               save.push_back(save_instr);
             }
             else{
               std::vector<Instruction*> temporary_uses = getUses(save_instr);
               temporary_uses.push_back(save_instr);
+              std::vector<Instruction*> usesnotinloop ;
+              for (int u=0; u<temporary_uses.size();u++){
+                if (!inVector(allLoopInstructions, temporary_uses[u])){
+                  usesnotinloop.push_back(temporary_uses[u]);
+                }
+                else{
+                  save.push_back(temporary_uses[u]);
+                }
+              }
                 //compute set has all the formulas, for each store statement in the format (an example below)
                 //       alloca
                 //       store
                 //       add
                 //       store (the actual store instruction is part of the set)
-              compute.push_back(temporary_uses);
+              compute.push_back(usesnotinloop);
                 // compute.insert(compute.end(), std::make_move_iterator(temporary_uses.begin()), std::make_move_iterator(temporary_uses.end()));
             }
           }
@@ -140,12 +194,17 @@ namespace {
             // checkpoint_inst -> struct {save, compute , intermediary}
             // we iterate over intermediary, do use def, and filter instructions. Then we add them to save or compute set of
             // the same struct accordingly
-
+          //save all instruction which arent used to make a store instruction
           if (std::string("store") != std::string(I->getOpcodeName())){
               // std::vector<Instruction*> inter;
               // fix if no stores
-
-
+            for (int a=0; a<compute.size(); a++){
+              if (inVector(compute[a], &*I)){
+                errs() << "Instruction is being used as a Use, can not transfer to Save set\n";
+              }
+            
+            }
+            //pseuday iss se neechay inter wali handling hain
               //MASLA HERE 
             if (saved_stores.size() > 0){
               BasicBlock::iterator next_to_store(saved_stores[saved_stores.size()-1]);
@@ -191,7 +250,7 @@ namespace {
 
 
             }
-
+            //yahan se ooper inter handling
           }
             //fix states constructor
             // states* current_checkpoint = new states(save, compute, iter);
@@ -218,6 +277,16 @@ namespace {
             ++it;
             if (it != I->getParent()->end()){
               saved_stores.push_back(&*it);
+            }
+          }
+        }
+        else{
+          for (int a = 0; a < compute.size(); a++)
+          {
+           if (!inVector(compute[a], &*I))
+            {
+              errs() << "Not being used, so simply sent to save set\n";
+              save.push_back(&*I);
             }
           }
         }
