@@ -30,7 +30,7 @@ namespace {
     struct states{
       std::vector<Instruction*> save;
       std::vector< std::vector<Instruction*> > compute;
-      std::vector<Instruction*> intermediary;
+      // std::vector<Instruction*> intermediary;
     };
     std::map<Instruction*, states> checkpoint_list;
     void getAnalysisUsage(AnalysisUsage &AU) const override
@@ -43,24 +43,37 @@ namespace {
   // void iterate//
 
     bool inVector(std::vector<Instruction*> vec, Instruction* instr) {
-      // errs() << "Comgin";
-      for (int i = 0; i< vec.size(); i++) {
-        Value* first,*second;
-        first = vec[i]->getOperand(0);
-        second = vec[i]->getOperand(1);
-        errs() << *first << " ; " << second << "\n";
-        for (int j = 0; j < instr->getNumOperands(); j++) {
-          Value* operand = (instr->getOperand(j));
-          // errs() << *operand << "\n";
-          // for (int j = 0 ; j < vec.size(); j++) {
-          //   if (vec[j].getOperand)
-          // }
-          if (operand == first || operand == second) {
-            return 1;
-          }
+      errs() << "Comgin";
+      // if (std::find(vec.begin(), vec.end(), instr) != vec.end()){
+      //   errs() << "heeeeeeeellllllllloooooo\n";
+      //   return 1;
+      // }
+      for (int i=0; i<vec.size(); i++){
+        
+        if (vec[i]->isIdenticalTo(instr)){
+          errs() << "yeah\n";
+          return 1;
         }
-
       }
+      // for (int i = 0; i< vec.size(); i++) {
+      //   Value* first,*second;
+      //   if (vec[i]->getNumOperands() > 0){
+      //     first = vec[i]->getOperand(0);
+      //     second = vec[i]->getOperand(1);
+      //   for (int j = 0; j < instr->getNumOperands(); j++) {
+      //     Value* operand = (instr->getOperand(j));
+      //     // errs() << *operand << "\n";
+      //     // for (int j = 0 ; j < vec.size(); j++) {
+      //     //   if (vec[j].getOperand)
+      //     // }
+      //     if (operand == first || operand == second) {
+      //       return 1;
+      //     }
+      //   }
+      //   }
+      //   // errs() << *first << " ; " << second << "\n";
+
+      // }
       
 
       return 0;
@@ -144,7 +157,7 @@ namespace {
         // errs() << checkpoint << "shit: " << I << "\n";;
 
           std::vector< std::vector<Instruction*> > compute;
-          std::vector<Instruction*> save, inter; // 3 sets
+          std::vector<Instruction*> save;// inter; // 3 sets
           // std::set<Value*> live_variable; 
         if (std::string(F.getName()) == std::string("main") && 
           checkpoint % inst_cp == 0){
@@ -202,69 +215,72 @@ namespace {
               if (inVector(compute[a], &*I)){
                 errs() << "Instruction is being used as a Use, can not transfer to Save set\n";
               }
+              // else{
+              //   errs() << "FUCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKlol\n";
+              // }
             
             }
-            //pseuday iss se neechay inter wali handling hain
-              //MASLA HERE 
-            if (saved_stores.size() > 0){
-              BasicBlock::iterator next_to_store(saved_stores[saved_stores.size()-1]);
-              BasicBlock::iterator curr_inst(I);
-                //go till current instruction
-              for (; curr_inst != next_to_store; --curr_inst){
-                // errs() << "lul\n";
-                // errs() << &*curr_inst << "     " << &*next_to_store << "\n";
-                inter.push_back(&*curr_inst);
-              }
-              std::reverse(inter.begin(), inter.end());
-            }
-            else{
-                // errs() << "hehehehhehe\n";
-                // errs() << checkpoint << "\n";
-                // errs() << checkpoint_instructions.size() << "\n";
-              if (checkpoint_instructions.size() > 0){
-                  // errs() << checkpoint_instructions.size()-1 << "\n";
-                BasicBlock::iterator bi(checkpoint_instructions[checkpoint_instructions.size()-1]);
-                  // errs() << "getting here\n";
-                BasicBlock::iterator bf(I);
-                for (BasicBlock::iterator iter = bi; iter != bf; iter++){
-                    // errs() << &*iter<< "\n";
-                  inter.push_back(&*iter);
-                    // errs() << "here?\n";
-                }
-              }
-              else{
-                  // errs() << "here\n";
-                errs() << checkpoint <<"\n";
-                  //If at pos5, need four decrements to goto pos1
-                int iffi_counter = inst_cp-1;
-                BasicBlock::iterator fin(I);
-                for (BasicBlock::iterator iter = fin; iffi_counter>0; iter--){
-                    // errs() << "yes\n";
-                  errs() << iffi_counter << "\n";
-                  errs() << *iter << "\n";
-                  inter.push_back(&*iter);
-                  iffi_counter--;
-                }
-                std::reverse(inter.begin(), inter.end());
-              }
+          //   //pseuday iss se neechay inter wali handling hain
+          //     //MASLA HERE 
+          //   if (saved_stores.size() > 0){
+          //     BasicBlock::iterator next_to_store(saved_stores[saved_stores.size()-1]);
+          //     BasicBlock::iterator curr_inst(I);
+          //       //go till current instruction
+          //     for (; curr_inst != next_to_store; --curr_inst){
+          //       // errs() << "lul\n";
+          //       // errs() << &*curr_inst << "     " << &*next_to_store << "\n";
+          //       inter.push_back(&*curr_inst);
+          //     }
+          //     std::reverse(inter.begin(), inter.end());
+          //   }
+          //   else{
+          //       // errs() << "hehehehhehe\n";
+          //       // errs() << checkpoint << "\n";
+          //       // errs() << checkpoint_instructions.size() << "\n";
+          //     if (checkpoint_instructions.size() > 0){
+          //         // errs() << checkpoint_instructions.size()-1 << "\n";
+          //       BasicBlock::iterator bi(checkpoint_instructions[checkpoint_instructions.size()-1]);
+          //         // errs() << "getting here\n";
+          //       BasicBlock::iterator bf(I);
+          //       for (BasicBlock::iterator iter = bi; iter != bf; iter++){
+          //           // errs() << &*iter<< "\n";
+          //         inter.push_back(&*iter);
+          //           // errs() << "here?\n";
+          //       }
+          //     }
+          //     else{
+          //         // errs() << "here\n";
+          //       errs() << checkpoint <<"\n";
+          //         //If at pos5, need four decrements to goto pos1
+          //       int iffi_counter = inst_cp-1;
+          //       BasicBlock::iterator fin(I);
+          //       for (BasicBlock::iterator iter = fin; iffi_counter>0; iter--){
+          //           // errs() << "yes\n";
+          //         errs() << iffi_counter << "\n";
+          //         errs() << *iter << "\n";
+          //         inter.push_back(&*iter);
+          //         iffi_counter--;
+          //       }
+          //       std::reverse(inter.begin(), inter.end());
+          //     }
 
 
-            }
-            //yahan se ooper inter handling
+          //   }
+          //   //yahan se ooper inter handling
           }
             //fix states constructor
             // states* current_checkpoint = new states(save, compute, iter);
-            // errs() <<"writing to map\n";
+          errs() <<"writing to map\n";
           states current_checkpoint;
           current_checkpoint.save = save;
           current_checkpoint.compute = compute;
-          current_checkpoint.intermediary = inter;
+          // current_checkpoint.intermediary = inter;
             //dictionary key to value mapping
           checkpoint_instructions.push_back(&*I);
           checkpoint_list[&*I] = current_checkpoint;
           save.clear();
           compute.clear();
-          inter.clear();
+          // inter.clear();
           errs() << "done with checkpointing\n";
           uses = 0; 
         }
@@ -306,19 +322,19 @@ namespace {
     //iterator over the map
       for (map_iterator = checkpoint_list.rbegin(); map_iterator != checkpoint_list.rend(); map_iterator++) {
         states temp = map_iterator->second;
-        errs() << "FIRST" << "\n";
+        // errs() << "FIRST" << "\n";
         for (int i = 0; i < map_iterator->second.compute.size(); i++) {
-          errs() << "SECOND" << "\n";
+          // errs() << "SECOND" << "\n";
 
           for (int j = 0; j < map_iterator->second.compute[i].size(); j++) {
-            errs() << "THIRD" << "\n";
+            // errs() << "THIRD" << "\n";
             bool dependency = false;
             for (second_map_iterator = map_iterator, second_map_iterator++; second_map_iterator != checkpoint_list.rend(); second_map_iterator++) {
-              errs() << "FOURTH" << "\n";
+              // errs() << "FOURTH" << "\n";
               errs() << second_map_iterator->second.save.size() << "\n";
               if (inVector(second_map_iterator->second.save, map_iterator->second.compute[i][j])) {
                 dependency = true;
-                errs() << "HAI DEPENDANCY" << "\n";
+                // errs() << "HAI DEPENDANCY" << "\n";
                 break;
               }
             }
@@ -350,10 +366,10 @@ namespace {
           errs() << *(map_iterator2->second.save[i]) << "\n";
 
         }
-        errs() << "Intermediary set: \n";
-        for (int i = 0; i < map_iterator2->second.intermediary.size(); i++) {
-          errs() << *(map_iterator2->second.intermediary[i]) << "\n";
-        }
+        // errs() << "Intermediary set: \n";
+        // for (int i = 0; i < map_iterator2->second.intermediary.size(); i++) {
+        //   errs() << *(map_iterator2->second.intermediary[i]) << "\n";
+        // }
         errs() << "Computer set: \n";
 
         for (int i =0; i< map_iterator2->second.compute.size(); i++) {
