@@ -24,10 +24,12 @@ using namespace llvm;
 namespace {
 	struct SkeletonPass : public FunctionPass {
 		static char ID;
-		int checkpoint = 1;
+		int checkpoint = 0;
 		const int inst_cp = 20;
-		const int threshold = 2;
+		const int threshold = 7;
 		std::string functionName = "process_thread_webserver_process";
+		// std::string functionName = "process_thread_calc_process";
+		// std::string functionName = "collect_view_construct_message";
 		std::vector< Instruction* > saved_stores;
 		std::vector< Instruction*> checkpoint_instructions;
     // std::string functionName = ""
@@ -147,22 +149,26 @@ namespace {
 				auto *bb = &BB;
 				bblist.push_back(bb);
 			}
+			int fuck, shit;
+			int loopStart;
       // errs() << bblist.size() ;
-			for (int fuck = 0; fuck < bblist.size(); fuck++)
+			for (fuck = 0; fuck < bblist.size(); fuck++)
 			{
 				TerminatorInst *tI = bblist[fuck]->getTerminator();
 				if (BranchInst *bi = dyn_cast<BranchInst>(tI))
 				{
-					for (int shit = 0; shit < fuck; shit++)
+					for (shit = 0; shit < fuck; shit++)
 					{
 						for (int i = 0; i < bi->getNumSuccessors(); i++)
 						{
 							BasicBlock *successor = bi->getSuccessor(i);
 							if (successor == bblist[shit])
 							{
-								errs() << "comparison successful\n";
-								errs() << fuck << " " << shit << "\n";
+								// errs() << "comparison successful\n";
+								loopStart = shit;
+								// errs() << fuck << " " << shit << "\n";
 								loop = makeSlice(bblist, shit, fuck);
+								break;
 							}
 						}
 					}
@@ -174,7 +180,12 @@ namespace {
 				std::vector<Instruction*> instructions;
 				// BasicBlock& BB = bb;
 				for (BasicBlock::iterator I = bb->begin(); I!=bb->end(); ++I) {
-					instructions.push_back(&*I);
+					// *I;
+					Instruction* ins = &*I;
+
+					// *ins;
+					instructions.push_back(ins);
+					errs() << "S: " << *ins << "\n";
 				}
 
 
@@ -203,7 +214,7 @@ namespace {
       // errs() << BB.getInstList().size() << "\n";
       // for (auto& Inst: BB){
 			std::vector< std::vector<Instruction*> > compute;
-          		std::vector<Instruction*> save;// inter; // 3 sets
+          		std::vector<Instruction*> save, remaining_inst;// inter; // 3 sets
           		for (inst_iterator Inst = inst_begin(F); Inst != inst_end(F); ++Inst){
           			Instruction* I = &*Inst;
         // errs() << checkpoint << "shit: " << I << "\n";;
@@ -211,10 +222,12 @@ namespace {
           // std::set<Value*> live_variable; 
           			if (std::string(F.getName()) == functionName && 
           				checkpoint % inst_cp == 0){
+
           				compute.clear();
+          				save.clear();
              //at checkpoint
-          				// errs()<<"Checkpoint Instruction is"<<*I<<"\n";	
-          			errs() << "++++++++++++++++++++++++++++++save size before add: " << save.size() << "compute size before add: " << compute.size() << "\n";
+          			// 	errs()<<"Checkpoint Instruction is"<< *I <<"\n";	
+          			// errs() << "++++++++++++++++++++++++++++++save size before add: " << save.size() << "compute size before add: " << compute.size() << "\n";
 
             //get all save instructions one by one and perform use-def analysis
             	// errs()<<saved_stores.size()<<"\n";
@@ -222,6 +235,9 @@ namespace {
             		// errs() << "before populating save store \n";
           			// errs()<<*&*I<<"\n";
           				saved_stores.push_back(&*I);
+          			}
+          			else{
+          				save.push_back(&*I);
           			}
           			for (int st = 0; st < saved_stores.size(); st++){
 
@@ -232,8 +248,8 @@ namespace {
           				uses = getNumUses(save_instr);
           				inst_iterator use_iter = Inst;
           				use_iter--;
-          				uses = getRealNumUses(uses, getUses(save_instr), checkpoint_list[&*use_iter].save, checkpoint_list[&*use_iter].compute);
-          				// errs() << "Store instruction to be checked"<<*save_instr <<"------"<< uses <<"\n";
+          				uses = getRealNumUses(uses, getUses(save_instr), checkpoint_list[checkpoint_instructions[checkpoint_instructions.size()-1]].save, checkpoint_list[checkpoint_instructions[checkpoint_instructions.size()-1]].compute);
+          				// errs() << "Store instruction to be checked"<< *save_instr << "------"<< uses <<"\n";
           				if (uses > threshold){
           					save.push_back(save_instr);
           				}
@@ -256,6 +272,7 @@ namespace {
                 // compute.insert(compute.end(), std::make_move_iterator(temporary_uses.begin()), std::make_move_iterator(temporary_uses.end()));
           				}
           			}
+          			saved_stores.clear();
             //back track
             // if store is not on checkpoint, then we go back to last store, and save instruction from then on to the chekcpoint
             // in an intermediary set
@@ -330,23 +347,62 @@ namespace {
             //fix states constructor
             // states* current_checkpoint = new states(save, compute, iter);
           			// errs() <<"writing to map\n";
+          			// errs() << remaining_inst.size() << "\n";
+          			// for (int c=0; c<compute.size();c++){
+          			// 	// errs() << "compute set #" << c+1 << ":\n";
+          			// 	for (int d=0;d<compute[c].size();d++){
+          			// 		errs() << *compute[c][d] << "\n";
+          			// 	}
+          			// }
+          			if(compute.size() != 0){
+	          			for (int x=0; x<remaining_inst.size();x++){
+		          			for (int a = 0; a < compute.size(); a++)
+					          	{
+		          				// errs() << "!invector called when instruction not store, and to be saved in save set\n";
+					          		if (!inVector(compute[a], remaining_inst[x]))
+					          		{
+					          			// errs() << "Not being used, so simply sent to save set\n";
+					          			save.push_back(remaining_inst[x]);
+					          			break;
+					          		}
+					          		// else{
+					          		// 	errs() << "Being used. cant send to save\n";
+					          		// }
+					          	}
+	          			}
+          			}
+          			else{
+
+	          			for (int x=0; x<remaining_inst.size();x++){
+					        save.push_back(remaining_inst[x]);
+
+	          			}
+
+          			}
+          			remaining_inst.clear();
           			states current_checkpoint;
           			current_checkpoint.save = save;
           			current_checkpoint.compute = compute;
           // current_checkpoint.intermediary = inter;
             //dictionary key to value mapping
-          			checkpoint_instructions.push_back(&*I);
-          			checkpoint_list[&*I] = current_checkpoint;
-          			errs() << "*/*/*/*/*/*/*/*/*/*/*save size after add: " << save.size() << "         compute size after add: " << compute.size() << "\n";
-          			save.clear();
+          			Instruction* temp = &*I;
+          			checkpoint_instructions.push_back(temp);
+          			checkpoint_list[temp] = current_checkpoint;
+          			// errs() << "******************************save size after add: " << save.size() << "         compute size after add: " << compute.size() << "\n";
+          			// errs() << "Printing mapppppp\n";
+          			// for (std::map<Instruction*, states>::iterator it = checkpoint_list.begin(); it != checkpoint_list.end(); ++it){
+          			// 	// errs() << *(it->first) << "<- checkpoint instruction\n";
+          			// 	// errs() << it->second.save.size() << "    "<<it->second.compute.size() << "\n";
+          			// }
+          			// save.clear();
           			// compute.clear();
           // inter.clear();
           			// errs() << "done with checkpointing\n";
           			uses = 0; 
           		}
-          		else if (std::string(F.getName()) == functionName && checkpoint % inst_cp == 1){
-          			saved_stores.clear();
-          		}
+          		// else if (std::string(F.getName()) == functionName && checkpoint % inst_cp == 1){
+          		// 	saved_stores.clear();
+          		// }
           		else if (std::string(F.getName()) == functionName){
           			if (I->getOpcodeName() == std::string("store")){
           		// BasicBlock::iterator it(I);
@@ -359,19 +415,13 @@ namespace {
           			}
           			else{
           				// errs() << "COmpute ka size: " <<  compute.size() << "\n";
-          				for (int a = 0; a < compute.size(); a++)
-			          	{
-          				// errs() << "!invector called when instruction not store, and to be saved in save set\n";
-			          		if (!inVector(compute[a], &*I))
-			          		{
-			          			// errs() << "Not being used, so simply sent to save set\n";
-			          			save.push_back(&*I);
-			          			break;
-			          		}
-			          		// else{
-			          		// 	errs() << "Being used. cant send to save\n";
-			          		// }
-			          	}
+          				// errs() << "Remaining Instruction " << *I << "\n";
+          				if (I->getOpcodeName() == std::string("ret")){
+          					// errs() << "hmmmmmmmmmmm\n";
+          					break;
+          				}
+          				remaining_inst.push_back(&*I);
+         				
           			}
           	// }
           		}
@@ -402,13 +452,14 @@ namespace {
         // checkpoint = 1;
         // }
       // }
-
+          	// errs() << "out of for loop\n";
           	std::map<Instruction*,states>::reverse_iterator map_iterator, second_map_iterator;
 
 
     //iterator over the map
           	for (map_iterator = checkpoint_list.rbegin(); map_iterator != checkpoint_list.rend(); map_iterator++) {
           		states temp = map_iterator->second;
+          	// errs() << "lul kappa\n";
         // errs() << "FIRST" << "\n";
           		for (int i = 0; i < map_iterator->second.compute.size(); i++) {
           // errs() << "SECOND" << "\n";
@@ -416,14 +467,17 @@ namespace {
           			for (int j = 0; j < map_iterator->second.compute[i].size(); j++) {
             // errs() << "THIRD" << "\n";
           				bool dependency = false;
-          				for (second_map_iterator = map_iterator, second_map_iterator++; second_map_iterator != checkpoint_list.rend(); second_map_iterator++) {
+          				for (second_map_iterator = map_iterator, second_map_iterator++; second_map_iterator != checkpoint_list.rend();second_map_iterator++) {
               // errs() << "FOURTH" << "\n";
           					// errs() << second_map_iterator->second.save.size() << "\n"; size zero
+              // errs () << i << "     " << j << "\n";
+              				// errs() << *map_iterator->second.compute[i][j] << "\n";
           					if (inVector(second_map_iterator->second.save, map_iterator->second.compute[i][j])) {
           						dependency = true;
-                // errs() << "HAI DEPENDANCY" << "\n";
+                
           						break;
           					}
+          				// errs() << "out of FOURTH\n";
           				}
 
           // transfer compute set to save set
@@ -431,8 +485,11 @@ namespace {
           				if (dependency) {
           					map_iterator->second.save.insert(map_iterator->second.save.end(), map_iterator->second.compute[i].rbegin(), map_iterator->second.compute[i].rbegin()+1);
           					map_iterator->second.compute.erase(map_iterator->second.compute.begin() + j);
-          					i--;
-          					continue;
+          					// if(i != 0){
+								i--;
+								break;
+          					// }
+          					// continue;
           				}
 
 
@@ -442,7 +499,7 @@ namespace {
           		}
           	}
 
-
+          	// errs() << "yup\n";
       // for ()
       // printing for debug purposesl
           	std::map<Instruction*,states>::iterator map_iterator2;
@@ -516,63 +573,105 @@ namespace {
           	}
 
      // errs() << endingBasicBlockIndex << "asdjkksajl--" << endingInstructionIndex << "\n";
-
       // errs () <<basicBlockIndex << " " << instructionIndex << " " << endingBasicBlockIndex << " " <<endingInstructionIndex << "\n";
-          	std::vector<Instruction*> instructions = loopInfo[loop[basicBlockIndex]];
+          	std::vector<Instruction*> instructions;
 
-          	for (int i = 0; i < instructionIndex; i++ ) {
-          		startingInstructions.push_back(instructions[i]);
+          	// errs() << "THE BASIC BLOCK IS: " << "\n";
+          	// loop[basicBlockIndex]->print(errs());
+          	// errs() << "---^---";
+
+          	if (basicBlockIndex != -1 || endingBasicBlockIndex != -1) {
+
+          		
+	          	for (int bb = 0; bb < basicBlockIndex; bb++) {
+	          		instructions = loopInfo[loop[bb]];
+	          		for (int j = 0; j < instructions.size(); j++) {
+	          			startingInstructions.push_back(instructions[j]);
+	          		}
+	          	}
+
+	          	instructions = loopInfo[loop[basicBlockIndex]];
+
+	          	// errs() << "aslkdnaklsdnasndlkaknsdlkanksdlasd\n";
+	          	for (int i = 0; i < instructionIndex; i++ ) {
+	          		// errs()<<*instructions[i]<<"\n";
+	          		startingInstructions.push_back(instructions[i]);
+	          	}
+	          	instructions = loopInfo[loop[endingBasicBlockIndex]];
+
+	          	for (int i = endingInstructionIndex+1; i < instructions.size(); i++) {
+	          		// errs()<<*instructions[i]<<"\n";
+	          		endingInstructions.push_back(instructions[i]);
+	          	}
+	          	for (int bb = endingInstructionIndex+1; bb < loop.size(); bb++) {
+	          		instructions = loopInfo[loop[bb]];
+	          		for (int j = 0; j < instructions.size(); j++) {
+	          			endingInstructions.push_back(instructions[j]);
+	          		}
+	          	}
+
+	          	errs() << "printing sets" << "\n";
+	          	errs() << "--------------------------------" << "\n";
+	          	// std::reverse(endingInstructions.begin(), endingInstructions.end());
+	          	errs() << "EXTRA SET LOOP INSIDE" << endingInstructions.size()<<"       "<<startingInstructions.size()<<"\n";
+	          	for (int i = 0; i < endingInstructions.size(); i++) {
+	          		errs() << *endingInstructions[i] << "\n";
+	          	}
+
+	          	for (int i = 0 ; i < startingInstructions.size(); i++) {
+	          		errs() << *startingInstructions[i] << "\n";
+	          	}
+	          	// errs() << "------------------\n"; 
+
           	}
-
-          	instructions = loopInfo[loop[endingBasicBlockIndex]];
-
-          	for (int i = instructions.size(); i > endingInstructionIndex; i--) {
-          		endingInstructions.push_back(instructions[i]);
-          	}
-
-          	std::reverse(endingInstructions.begin(), endingInstructions.end());
-          	errs() << "EXTRA SET" << "\n";
-          	for (int i = 0; i < endingInstructions.size(); i++) {
-          		errs() << *endingInstructions[i] << "\n";
-          	}
-
-          	for (int i = 0 ; i < startingInstructions.size(); i++) {
-          		errs() << *startingInstructions[i] << "\n";
-          	}
-
-          	errs() << "------------------\n"; 
           	DataLayout* DL = new DataLayout(F.getParent());
           	for (map_iterator2 = checkpoint_list.begin(); map_iterator2 != checkpoint_list.end(); map_iterator2++) {
           		errs() << "-- Checkpoint instruction --" << "\n";
           		int save_size = 0; int total = 0;
-          		errs() << *(map_iterator2->first) << "\n";
+          		// errs() << *(map_iterator2->first) << "\n";
           		errs() << "Save set: \n";
           		for (int i = 0; i < map_iterator2->second.save.size(); i++) {
           			Instruction* printInst = &*(map_iterator2->second.save[i]);
-          			errs() << *printInst << "\n";
+		      			errs() << *printInst << "\n";
           // errs() << *(map_iterator2->second.save[i]) << "\n";
           			if (!(*printInst->getType()).isVoidTy()){
           				save_size += DL->getTypeAllocSize(printInst->getType());
           				total += DL->getTypeAllocSize(printInst->getType());
+          			}
+          			else{
+          				if (printInst->getOperand(0)->getType()->isSized()){
+          					// errs() << "here\n";
+          					// errs() << save_size << "before\n";
+          					save_size += DL->getTypeAllocSize(printInst->getOperand(0)->getType());
+          					// errs() << save_size << "after\n";
+          					total += DL->getTypeAllocSize(printInst->getOperand(0)->getType());
+          				}
           			}
           		}
         // errs() << "Intermediary set: \n";
         // for (int i = 0; i < map_iterator2->second.intermediary.size(); i++) {
         //   errs() << *(map_iterator2->second.intermediary[i]) << "\n";
         // }
-          		errs() << "Computer set: \n";
+          		errs() << "Compute set: \n";
 
           		for (int i =0; i< map_iterator2->second.compute.size(); i++) {
           			for (int j = 0; j < map_iterator2->second.compute[i].size(); j++) {
           				Instruction* pI = &*(map_iterator2->second.compute[i][j]);
           				errs() << *pI << "\n";
+          					// errs() << "lulzzzzzzzzzzzzzzzzzzzzzzzz " <<*pI->getType() << "\n";
           				if (!(*pI->getType()).isVoidTy())
           				{
           					total += DL->getTypeAllocSize(pI->getType());
           				}
+          				else{
+          					if (pI->getOperand(0)->getType()->isSized()){
+          						
+	          					total += DL->getTypeAllocSize(pI->getOperand(0)->getType());
+          					}
+          				}
           			}
           		}
-          		errs () << "Save memory: " << save_size << "     ,,,,     " << "total memory: " << total << "\n"; 
+          		errs () << "Save set memory: "<< save_size << " Total memory: "<<  total << "\n"; 
           	}
           	return false;
           }
