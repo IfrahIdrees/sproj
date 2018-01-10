@@ -9,52 +9,63 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/User.h"
+#include "llvm/IR/DataLayout.h"
 #include <iostream>
 #include <vector>
 #include <iterator>
 #include <set>
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/LoopInfo.h"
+#include "llvm/IR/Dominators.h"
 #include <map>
 using namespace llvm;
 
 
 namespace {
-  struct SkeletonPass : public FunctionPass {
-    static char ID;
-    int checkpoint = 1;
-    const int inst_cp = 4;
-    const int threshold = 3;
-    std::vector< Instruction* > saved_stores;
-    std::vector< Instruction*> checkpoint_instructions;
-    struct states{
-      std::vector<Instruction*> save;
-      std::vector< std::vector<Instruction*> > compute;
-      // std::vector<Instruction*> intermediary;
-    };
-    std::map<Instruction*, states> checkpoint_list;
-    void getAnalysisUsage(AnalysisUsage &AU) const override
-    {
-      AU.addRequired<LoopInfoWrapperPass>();
-      AU.setPreservesAll();
-    }
-    SkeletonPass() : FunctionPass(ID) {}
+	struct SkeletonPass : public FunctionPass {
+		static char ID;
+		int checkpoint = 1;
+		const int inst_cp = 20;
+		const int threshold = 2;
+		std::string functionName = "process_thread_webserver_process";
+		std::vector< Instruction* > saved_stores;
+		std::vector< Instruction*> checkpoint_instructions;
+    // std::string functionName = ""
+		struct states{
+			std::vector<Instruction*> save;
+			std::vector< std::vector<Instruction*> > compute;
+      // std::vector<Instruaction*> intermediary;
+		};
+		std::map<Instruction*, states> checkpoint_list;
+		void getAnalysisUsage(AnalysisUsage &AU) const override
+		{
+			AU.addRequired<LoopInfoWrapperPass>();
+			AU.setPreservesAll();
+		}
+		SkeletonPass() : FunctionPass(ID) {}
 
   // void iterate//
-
-    bool inVector(std::vector<Instruction*> vec, Instruction* instr) {
-      errs() << "Comgin";
+		std::vector<BasicBlock *> makeSlice(std::vector<BasicBlock *> vec, int start, int end)
+		{
+      // std::vector<BasicBlock*> toReturn(end-start+1);
+      // for (start; start < end; start++){
+			return std::vector<BasicBlock *>(vec.begin() + start, vec.begin() + end + 1);
+      // }
+		}
+		bool inVector(std::vector<Instruction*> vec, Instruction* instr) {
+			// errs() << "Comgin";
       // if (std::find(vec.begin(), vec.end(), instr) != vec.end()){
       //   errs() << "heeeeeeeellllllllloooooo\n";
       //   return 1;
       // }
-      for (int i=0; i<vec.size(); i++){
-        
-        if (vec[i]->isIdenticalTo(instr)){
-          errs() << "yeah\n";
-          return 1;
-        }
-      }
+			for (int i=0; i<vec.size(); i++){
+				// errs () << "inVector" << "\n";
+				// errs() << vec[i] << "          " << instr << "\n";
+				if (vec[i]->isIdenticalTo(instr)){
+					// errs() << "yeah\n";
+					return 1;
+				}
+			}
       // for (int i = 0; i< vec.size(); i++) {
       //   Value* first,*second;
       //   if (vec[i]->getNumOperands() > 0){
@@ -74,130 +85,177 @@ namespace {
       //   // errs() << *first << " ; " << second << "\n";
 
       // }
-      
 
-      return 0;
-    }
+
+			return 0;
+		}
 
     // void deleteAt(vector<Instruction*)
-    int getNumUses(Instruction* I){
-      int num_uses = 0;
-      for (Use& U: I->operands()){
-        Value* V = U.get();
-        if (Instruction* use = dyn_cast<Instruction>(V)){
-          num_uses++;
-          num_uses += getNumUses(use);
-        }
-      }
-      return num_uses;
-    }
-    int getRealNumUses(int num_uses, std::vector<Instruction*> uses, std::vector<Instruction*> save, std::vector< std::vector<Instruction*> > compute){
-      int u = num_uses;
-      for (int i=0; i<uses.size(); i++){
-        if (inVector(save, uses[i]))
-          u--;
-        for (int j=0; j<compute.size(); j++){
-          if (inVector(compute[j], uses[i]))
-            u--;
-        }
-      }
-      return u;
-    }
-    std::vector<Instruction*> getUses(Instruction* I) {
-      std::vector<Instruction*> uses ;
-      for (Use &U : I->operands()) {
-        Value *v = U.get();
-        if (Instruction *use = dyn_cast<Instruction>(v)) {
-          uses.push_back(use);
-          std::vector<Instruction*> lul_kappa = getUses(use);
-          uses.insert(
-            uses.end(),
-            std::make_move_iterator(lul_kappa.begin()),
-            std::make_move_iterator(lul_kappa.end())
-            );
-        }
-      }
-      return uses;
-    }
-    virtual bool runOnFunction(Function &F) {
-      if (F.getName() != std::string("main"))
-        return false;
-      int uses = 0;
-      std::vector<Instruction *> allLoopInstructions;
-      //take each instruction in a loop and insert into above vector. it will be later used to filter uses which aren't inside a loop.
-      // DO NOT CHANGE THE CODE BELOW
-      if (!F.isDeclaration())
-      {
-        LoopInfo &LI = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-        LoopInfo::iterator lit = getAnalysis<LoopInfoWrapperPass>().getLoopInfo().begin();
-        LoopInfo::iterator let = getAnalysis<LoopInfoWrapperPass>().getLoopInfo().end();
-        for (; lit != let; ++lit)
-        {
-          Loop *L = *lit;
-          auto allBlocks = L->getBlocks();
-          for (int s = 0; s < allBlocks.size(); s++)
-          {
-            BasicBlock *BB = allBlocks[s];
-            for (BasicBlock::iterator bi = BB->begin(); bi != BB->end(); ++bi)
-            {
-              Instruction *loopInst = &*bi;
-              allLoopInstructions.push_back(&*loopInst);
-            }
-          }
-        }
-      }
+		int getNumUses(Instruction* I){
+			int num_uses = 0;
+			for (Use& U: I->operands()){
+				Value* V = U.get();
+				if (Instruction* use = dyn_cast<Instruction>(V)){
+					num_uses++;
+					num_uses += getNumUses(use);
+				}
+			}
+			return num_uses;
+		}
+		int getRealNumUses(int num_uses, std::vector<Instruction*> uses, std::vector<Instruction*> save, std::vector< std::vector<Instruction*> > compute){
+			int u = num_uses;
+			for (int i=0; i<uses.size(); i++){
+				// errs() << "inVector called from getRealNumUses\n";
+				if (inVector(save, uses[i]))
+					u--;
+				for (int j=0; j<compute.size(); j++){
+					if (inVector(compute[j], uses[i]))
+						u--;
+				}
+			}
+			return u;
+		}
+		std::vector<Instruction*> getUses(Instruction* I) {
+			std::vector<Instruction*> uses ;
+			for (Use &U : I->operands()) {
+				Value *v = U.get();
+				if (Instruction *use = dyn_cast<Instruction>(v)) {
+					uses.push_back(use);
+					std::vector<Instruction*> lul_kappa = getUses(use);
+					uses.insert(
+						uses.end(),
+						std::make_move_iterator(lul_kappa.begin()),
+						std::make_move_iterator(lul_kappa.end())
+						);
+				}
+			}
+			return uses;
+		}
+		virtual bool runOnFunction(Function &F) {
+			if (F.getName() != functionName)
+				return false;
+			int uses = 0;
+
+			std::vector<Instruction *> allLoopInstructions;
+			std::vector<BasicBlock*> loop;
+			std::map<BasicBlock*, std::vector<Instruction*> > loopInfo;
+			// errs() << F.getName() << "\n";
+      // Module *m = F.getParent();
+			std::vector<BasicBlock *> bblist;
+			for (auto &BB : F)
+			{
+				auto *bb = &BB;
+				bblist.push_back(bb);
+			}
+      // errs() << bblist.size() ;
+			for (int fuck = 0; fuck < bblist.size(); fuck++)
+			{
+				TerminatorInst *tI = bblist[fuck]->getTerminator();
+				if (BranchInst *bi = dyn_cast<BranchInst>(tI))
+				{
+					for (int shit = 0; shit < fuck; shit++)
+					{
+						for (int i = 0; i < bi->getNumSuccessors(); i++)
+						{
+							BasicBlock *successor = bi->getSuccessor(i);
+							if (successor == bblist[shit])
+							{
+								errs() << "comparison successful\n";
+								errs() << fuck << " " << shit << "\n";
+								loop = makeSlice(bblist, shit, fuck);
+							}
+						}
+					}
+				}
+			}
+
+			for (int i = 0; i < loop.size(); i++) {
+				BasicBlock* bb = loop[i];
+				std::vector<Instruction*> instructions;
+				// BasicBlock& BB = bb;
+				for (BasicBlock::iterator I = bb->begin(); I!=bb->end(); ++I) {
+					instructions.push_back(&*I);
+				}
+
+
+				loopInfo[bb] = instructions;
+
+			}
+
+
+      //  Function* thisFunc = &F;
+      // llvm::DominatorTree* DT = new llvm::DominatorTree();
+      //  DT->recalculate(*thisFunc);
+      //  //generate the LoopInfoBase for the current function
+      //  llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop>* KLoop = new llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop>();
+      //  KLoop->releaseMemory();
+      //  KLoop->Analyze(DT->getBase());
+
+      //  errs() << "The number of block in this function are " << KLoop->getLoopDepth() << "\n";
+      // std::vector<Instruction *> allLoopInstructions;
+      // //take each instruction in a loop and insert into above vector. it will be later used to filter uses which aren't inside a loop.
+      // // DO NOT CHANGE THE CODE BELOW
+			
       //DO NOT CHANNGE THE CODE ABOVE
       // for (auto& F: M){
       // for (auto& BB: F){
 
       // errs() << BB.getInstList().size() << "\n";
       // for (auto& Inst: BB){
-      for (inst_iterator Inst = inst_begin(F); Inst != inst_end(F); ++Inst){
-        Instruction* I = &*Inst;
+			std::vector< std::vector<Instruction*> > compute;
+          		std::vector<Instruction*> save;// inter; // 3 sets
+          		for (inst_iterator Inst = inst_begin(F); Inst != inst_end(F); ++Inst){
+          			Instruction* I = &*Inst;
         // errs() << checkpoint << "shit: " << I << "\n";;
 
-          std::vector< std::vector<Instruction*> > compute;
-          std::vector<Instruction*> save;// inter; // 3 sets
           // std::set<Value*> live_variable; 
-        if (std::string(F.getName()) == std::string("main") && 
-          checkpoint % inst_cp == 0){
+          			if (std::string(F.getName()) == functionName && 
+          				checkpoint % inst_cp == 0){
+          				compute.clear();
              //at checkpoint
+          				// errs()<<"Checkpoint Instruction is"<<*I<<"\n";	
+          			errs() << "++++++++++++++++++++++++++++++save size before add: " << save.size() << "compute size before add: " << compute.size() << "\n";
 
             //get all save instructions one by one and perform use-def analysis
-          for (int st = 0; st < saved_stores.size(); st++){
+            	// errs()<<saved_stores.size()<<"\n";
+          			if (I->getOpcodeName() == std::string("store")){
+            		// errs() << "before populating save store \n";
+          			// errs()<<*&*I<<"\n";
+          				saved_stores.push_back(&*I);
+          			}
+          			for (int st = 0; st < saved_stores.size(); st++){
 
-            Instruction* next_to_save_instr = saved_stores[st];
-            BasicBlock::iterator it1(next_to_save_instr);
-            it1--;
-            Instruction* save_instr = &*it1;
-            uses = getNumUses(save_instr);
-            inst_iterator use_iter = Inst;
-            use_iter--;
-            uses = getRealNumUses(uses, getUses(save_instr), checkpoint_list[&*use_iter].save, checkpoint_list[&*use_iter].compute);
-            if (uses > threshold){
-              save.push_back(save_instr);
-            }
-            else{
-              std::vector<Instruction*> temporary_uses = getUses(save_instr);
-              temporary_uses.push_back(save_instr);
-              std::vector<Instruction*> usesnotinloop ;
-              for (int u=0; u<temporary_uses.size();u++){
-                if (!inVector(allLoopInstructions, temporary_uses[u])){
-                  usesnotinloop.push_back(temporary_uses[u]);
-                }
-                else{
-                  save.push_back(temporary_uses[u]);
-                }
-              }
+          				Instruction* save_instr = saved_stores[st];
+          		// BasicBlock::iterator it1(next_to_save_instr);
+          		// it1--;
+          		// Instruction* save_instr = &*it1;
+          				uses = getNumUses(save_instr);
+          				inst_iterator use_iter = Inst;
+          				use_iter--;
+          				uses = getRealNumUses(uses, getUses(save_instr), checkpoint_list[&*use_iter].save, checkpoint_list[&*use_iter].compute);
+          				// errs() << "Store instruction to be checked"<<*save_instr <<"------"<< uses <<"\n";
+          				if (uses > threshold){
+          					save.push_back(save_instr);
+          				}
+          				else{
+          					std::vector<Instruction*> temporary_uses = getUses(save_instr);
+          					temporary_uses.push_back(save_instr);
+          					// errs()<<"compute set"<<"\n";
+          					// for (auto &i :temporary_uses){
+          					// 	errs()<<*i<<"\n";
+          					// }
+          					// temporary_uses.push_back(save_instr);
+          			// std::vector<Instruction*> usesnotinloop ;
+
                 //compute set has all the formulas, for each store statement in the format (an example below)
                 //       alloca
                 //       store
                 //       add
                 //       store (the actual store instruction is part of the set)
-              compute.push_back(usesnotinloop);
+          					compute.push_back(temporary_uses);
                 // compute.insert(compute.end(), std::make_move_iterator(temporary_uses.begin()), std::make_move_iterator(temporary_uses.end()));
-            }
-          }
+          				}
+          			}
             //back track
             // if store is not on checkpoint, then we go back to last store, and save instruction from then on to the chekcpoint
             // in an intermediary set
@@ -208,18 +266,19 @@ namespace {
             // we iterate over intermediary, do use def, and filter instructions. Then we add them to save or compute set of
             // the same struct accordingly
           //save all instruction which arent used to make a store instruction
-          if (std::string("store") != std::string(I->getOpcodeName())){
-              // std::vector<Instruction*> inter;
-              // fix if no stores
-            for (int a=0; a<compute.size(); a++){
-              if (inVector(compute[a], &*I)){
-                errs() << "Instruction is being used as a Use, can not transfer to Save set\n";
-              }
-              // else{
-              //   errs() << "FUCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKlol\n";
-              // }
-            
-            }
+          			// if (std::string("store") != std::string(I->getOpcodeName())){
+             //  // std::vector<Instruction*> inter;
+             //  // fix if no stores
+          			// 	for (int a=0; a<compute.size(); a++){
+          			// 	errs () << "Invector called when instruction not store\n";
+          			// 		if (inVector(compute[a], &*I)){
+          			// 			errs() << "Instruction is being used as a Use, can not transfer to Save set\n";
+          			// 		}
+             //  // else{
+             //  //   errs() << "FUCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKlol\n";
+             //  // }
+
+          			// 	}
           //   //pseuday iss se neechay inter wali handling hain
           //     //MASLA HERE 
           //   if (saved_stores.size() > 0){
@@ -267,135 +326,272 @@ namespace {
 
           //   }
           //   //yahan se ooper inter handling
-          }
+          			// }
             //fix states constructor
             // states* current_checkpoint = new states(save, compute, iter);
-          errs() <<"writing to map\n";
-          states current_checkpoint;
-          current_checkpoint.save = save;
-          current_checkpoint.compute = compute;
+          			// errs() <<"writing to map\n";
+          			states current_checkpoint;
+          			current_checkpoint.save = save;
+          			current_checkpoint.compute = compute;
           // current_checkpoint.intermediary = inter;
             //dictionary key to value mapping
-          checkpoint_instructions.push_back(&*I);
-          checkpoint_list[&*I] = current_checkpoint;
-          save.clear();
-          compute.clear();
+          			checkpoint_instructions.push_back(&*I);
+          			checkpoint_list[&*I] = current_checkpoint;
+          			errs() << "*/*/*/*/*/*/*/*/*/*/*save size after add: " << save.size() << "         compute size after add: " << compute.size() << "\n";
+          			save.clear();
+          			// compute.clear();
           // inter.clear();
-          errs() << "done with checkpointing\n";
-          uses = 0; 
-        }
-        else if (std::string(F.getName()) == std::string("main") && checkpoint % inst_cp == 1){
-          saved_stores.clear();
-        }
-        else if (std::string(F.getName()) == std::string("main") && checkpoint % inst_cp != 0){
-          if (I->getOpcodeName() == std::string("store")){
-            BasicBlock::iterator it(I);
-            ++it;
-            if (it != I->getParent()->end()){
-              saved_stores.push_back(&*it);
-            }
-          }
-        }
-        else{
-          for (int a = 0; a < compute.size(); a++)
-          {
-           if (!inVector(compute[a], &*I))
-            {
-              errs() << "Not being used, so simply sent to save set\n";
-              save.push_back(&*I);
-            }
-          }
-        }
-          // else if (F.getName() != "main"){
-          //  errs() << F.getName() << "\n";
-          //  // errs() << "lul kappa no main found\n";
+          			// errs() << "done with checkpointing\n";
+          			uses = 0; 
+          		}
+          		else if (std::string(F.getName()) == functionName && checkpoint % inst_cp == 1){
+          			saved_stores.clear();
+          		}
+          		else if (std::string(F.getName()) == functionName){
+          			if (I->getOpcodeName() == std::string("store")){
+          		// BasicBlock::iterator it(I);
+          		// ++it;
+          		// errs()<<"before populating save store"<<"\n";
+          		// errs()<<"outside if"<<*it<<"\n";
+          		// if (it != I->getParent()->end()){
+          			// errs()<<*&*I<<"\n";
+          				saved_stores.push_back(&*I);
+          			}
+          			else{
+          				// errs() << "COmpute ka size: " <<  compute.size() << "\n";
+          				for (int a = 0; a < compute.size(); a++)
+			          	{
+          				// errs() << "!invector called when instruction not store, and to be saved in save set\n";
+			          		if (!inVector(compute[a], &*I))
+			          		{
+			          			// errs() << "Not being used, so simply sent to save set\n";
+			          			save.push_back(&*I);
+			          			break;
+			          		}
+			          		// else{
+			          		// 	errs() << "Being used. cant send to save\n";
+			          		// }
+			          	}
+          			}
+          	// }
+          		}
+          // else{
+          // 	for (int a = 0; a < compute.size(); a++)
+          // 	{
+          // 		if (!inVector(compute[a], &*I))
+          // 		{
+          // 			errs() << "Not being used, so simply sent to save set\n";
+          // 			save.push_back(&*I);
+          // 		}
+          // 	}
           // }
-
-        checkpoint++;
-      }
+          // else if (F.getName() != "process_thread_processes_process"){
+          //  errs() << F.getName() << "\n";
+          //  // errs() << "lul kappa no process_thread_processes_process found\n";
+          // }
+          // for (int a = 0; a < compute.size(); a++)
+          // {
+          //   if (!inVector(compute[a], &*I))
+          //   {
+          //     errs() << "Not being used, so simply sent to save set\n";
+          //     save.push_back(&*I);
+          //   }
+          // }
+          		checkpoint++;
+          	}
         // checkpoint = 1;
         // }
       // }
 
-      std::map<Instruction*,states>::reverse_iterator map_iterator, second_map_iterator;
+          	std::map<Instruction*,states>::reverse_iterator map_iterator, second_map_iterator;
+
 
     //iterator over the map
-      for (map_iterator = checkpoint_list.rbegin(); map_iterator != checkpoint_list.rend(); map_iterator++) {
-        states temp = map_iterator->second;
+          	for (map_iterator = checkpoint_list.rbegin(); map_iterator != checkpoint_list.rend(); map_iterator++) {
+          		states temp = map_iterator->second;
         // errs() << "FIRST" << "\n";
-        for (int i = 0; i < map_iterator->second.compute.size(); i++) {
+          		for (int i = 0; i < map_iterator->second.compute.size(); i++) {
           // errs() << "SECOND" << "\n";
 
-          for (int j = 0; j < map_iterator->second.compute[i].size(); j++) {
+          			for (int j = 0; j < map_iterator->second.compute[i].size(); j++) {
             // errs() << "THIRD" << "\n";
-            bool dependency = false;
-            for (second_map_iterator = map_iterator, second_map_iterator++; second_map_iterator != checkpoint_list.rend(); second_map_iterator++) {
+          				bool dependency = false;
+          				for (second_map_iterator = map_iterator, second_map_iterator++; second_map_iterator != checkpoint_list.rend(); second_map_iterator++) {
               // errs() << "FOURTH" << "\n";
-              errs() << second_map_iterator->second.save.size() << "\n";
-              if (inVector(second_map_iterator->second.save, map_iterator->second.compute[i][j])) {
-                dependency = true;
+          					// errs() << second_map_iterator->second.save.size() << "\n"; size zero
+          					if (inVector(second_map_iterator->second.save, map_iterator->second.compute[i][j])) {
+          						dependency = true;
                 // errs() << "HAI DEPENDANCY" << "\n";
-                break;
-              }
-            }
+          						break;
+          					}
+          				}
 
           // transfer compute set to save set
 
-            if (dependency) {
-              map_iterator->second.save.insert(map_iterator->second.save.end(), map_iterator->second.compute[i].rbegin(), map_iterator->second.compute[i].rbegin()+1);
-              map_iterator->second.compute.erase(map_iterator->second.compute.begin() + j);
-              i--;
-              continue;
-            }
+          				if (dependency) {
+          					map_iterator->second.save.insert(map_iterator->second.save.end(), map_iterator->second.compute[i].rbegin(), map_iterator->second.compute[i].rbegin()+1);
+          					map_iterator->second.compute.erase(map_iterator->second.compute.begin() + j);
+          					i--;
+          					continue;
+          				}
 
 
           // clear the save set for the 
           // map_iterator->second.compute.clear();
-          }
-        }
-      }
+          			}
+          		}
+          	}
 
 
-      // printing for debug purposes
-      std::map<Instruction*,states>::iterator map_iterator2;
-      for (map_iterator2 = checkpoint_list.begin(); map_iterator2 != checkpoint_list.end(); map_iterator2++) {
-        errs() << "-- Checkpoint instruction --" << "\n";
-        errs() << *(map_iterator2->first) << "\n";
-        errs() << "Save set: \n";
-        for (int i = 0; i < map_iterator2->second.save.size(); i++) {
-          errs() << *(map_iterator2->second.save[i]) << "\n";
+      // for ()
+      // printing for debug purposesl
+          	std::map<Instruction*,states>::iterator map_iterator2;
+          	std::vector<Instruction*> startingInstructions;
+          	std::vector<Instruction*> endingInstructions;
+          	int basicBlockIndex, instructionIndex;
+          	int endingBasicBlockIndex, endingInstructionIndex;
 
-        }
+
+          	basicBlockIndex = -1;
+          	endingBasicBlockIndex = -1;
+          	bool flag = false;
+          	for (map_iterator2 = checkpoint_list.begin(); map_iterator2 != checkpoint_list.end(); map_iterator2++) {
+          		Instruction* checkpoint_instruction = (map_iterator2->first);
+
+      	// if (flag) break;
+          		for (int i = 0; i < loop.size(); i++) {
+      			// if (flag)
+      				// break;
+          			std::vector<Instruction*> instructions = loopInfo[loop[i]];
+          			for (int j = 0; j < instructions.size() ; j++) {
+      			// errs() << "loop 1 k ander\n";
+              // if (checkpoint_instruction->isIdenticalTo(instructions[j])) {
+              	// errs() << *checkpoint_instruction ;//<< "  --   " <<*(instructions[j]) << "\n";
+          				if (checkpoint_instruction==instructions[j]) {
+      			// errs() << "loop 1 k if k ander\n";
+      			// errs() << *checkpoint_instruction << "\n";
+          					if (basicBlockIndex == -1 || i < basicBlockIndex) {
+
+                	// errs() << "STARTING INSTRUCTION " << *checkpoint_instruction << "\n";
+          						basicBlockIndex = i;
+          						instructionIndex = j;
+
+                // } else if (i < basicBlockIndex) {
+                	// basicBlockIndex = i;
+                	// instructionIndex = j	
+          					}
+                // flag = true;
+                // break; 
+          				}
+          			}
+          		}
+          	}
+     // flag = false;
+
+          	std::map<Instruction*,states>::reverse_iterator map_iterator3;  
+     // errs() << basicBlockIndex << "asdjkksajl " << instructionIndex << "\n";
+          	for (map_iterator3 = checkpoint_list.rbegin(); map_iterator3 != checkpoint_list.rend(); map_iterator3++) {
+      	// errs() << "ooper wala loop theek hai\n";
+          		Instruction* checkpoint_instruction = map_iterator3->first;
+      	//bool flag = false;
+      	// if (flag) break;
+          		for (int i = loop.size()-1 ; i >= 0; i--) {
+      		// if (flag)
+      			// break;
+          			std::vector<Instruction*> instructions = loopInfo[loop[i]];
+          			for (int j = instructions.size()-1; j >= 0; j--) {
+          				if (checkpoint_instruction==instructions[j]) {
+          					if (endingBasicBlockIndex == -1 || i > endingBasicBlockIndex) {
+            		// errs() << "ENDING INSTURCTION: " << *checkpoint_instruction << "\n";
+            	// errs() << "loop 2 k if k ander\n";
+            	// errs() << *checkpoint_instruction << "\n";
+          						endingBasicBlockIndex = i;
+          						endingInstructionIndex = j;
+          					}
+              // flag=true;
+              // break; 
+          				}
+          			}
+          		}
+          	}
+
+     // errs() << endingBasicBlockIndex << "asdjkksajl--" << endingInstructionIndex << "\n";
+
+      // errs () <<basicBlockIndex << " " << instructionIndex << " " << endingBasicBlockIndex << " " <<endingInstructionIndex << "\n";
+          	std::vector<Instruction*> instructions = loopInfo[loop[basicBlockIndex]];
+
+          	for (int i = 0; i < instructionIndex; i++ ) {
+          		startingInstructions.push_back(instructions[i]);
+          	}
+
+          	instructions = loopInfo[loop[endingBasicBlockIndex]];
+
+          	for (int i = instructions.size(); i > endingInstructionIndex; i--) {
+          		endingInstructions.push_back(instructions[i]);
+          	}
+
+          	std::reverse(endingInstructions.begin(), endingInstructions.end());
+          	errs() << "EXTRA SET" << "\n";
+          	for (int i = 0; i < endingInstructions.size(); i++) {
+          		errs() << *endingInstructions[i] << "\n";
+          	}
+
+          	for (int i = 0 ; i < startingInstructions.size(); i++) {
+          		errs() << *startingInstructions[i] << "\n";
+          	}
+
+          	errs() << "------------------\n"; 
+          	DataLayout* DL = new DataLayout(F.getParent());
+          	for (map_iterator2 = checkpoint_list.begin(); map_iterator2 != checkpoint_list.end(); map_iterator2++) {
+          		errs() << "-- Checkpoint instruction --" << "\n";
+          		int save_size = 0; int total = 0;
+          		errs() << *(map_iterator2->first) << "\n";
+          		errs() << "Save set: \n";
+          		for (int i = 0; i < map_iterator2->second.save.size(); i++) {
+          			Instruction* printInst = &*(map_iterator2->second.save[i]);
+          			errs() << *printInst << "\n";
+          // errs() << *(map_iterator2->second.save[i]) << "\n";
+          			if (!(*printInst->getType()).isVoidTy()){
+          				save_size += DL->getTypeAllocSize(printInst->getType());
+          				total += DL->getTypeAllocSize(printInst->getType());
+          			}
+          		}
         // errs() << "Intermediary set: \n";
         // for (int i = 0; i < map_iterator2->second.intermediary.size(); i++) {
         //   errs() << *(map_iterator2->second.intermediary[i]) << "\n";
         // }
-        errs() << "Computer set: \n";
+          		errs() << "Computer set: \n";
 
-        for (int i =0; i< map_iterator2->second.compute.size(); i++) {
-          for (int j = 0; j < map_iterator2->second.compute[i].size(); j++) {
-            errs() << *(map_iterator2->second.compute[i][j]) << "\n";
+          		for (int i =0; i< map_iterator2->second.compute.size(); i++) {
+          			for (int j = 0; j < map_iterator2->second.compute[i].size(); j++) {
+          				Instruction* pI = &*(map_iterator2->second.compute[i][j]);
+          				errs() << *pI << "\n";
+          				if (!(*pI->getType()).isVoidTy())
+          				{
+          					total += DL->getTypeAllocSize(pI->getType());
+          				}
+          			}
+          		}
+          		errs () << "Save memory: " << save_size << "     ,,,,     " << "total memory: " << total << "\n"; 
+          	}
+          	return false;
           }
-        }
-      }
-      return false;
-    }
-  };
-}
+      };
+  }
 
-char SkeletonPass::ID = 0;
+  char SkeletonPass::ID = 0;
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html
-static void registerSkeletonPass(const PassManagerBuilder &,
- legacy::PassManagerBase &PM) {
-  PM.add(new SkeletonPass());
-}
-static RegisterStandardPasses
-RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible,
- registerSkeletonPass);
+  static void registerSkeletonPass(const PassManagerBuilder &,
+  	legacy::PassManagerBase &PM) {
+  	PM.add(new SkeletonPass());
+  }
+  static RegisterStandardPasses
+  RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible,
+  	registerSkeletonPass);
 
-static RegisterPass<SkeletonPass> X("course","shit");
+  static RegisterPass<SkeletonPass> X("course","shit");
 
 // #include "llvm/Pass.h"
 // #include "llvm/IR/Function.h"
