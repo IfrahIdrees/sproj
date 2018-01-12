@@ -149,25 +149,25 @@ namespace {
 				auto *bb = &BB;
 				bblist.push_back(bb);
 			}
-			int fuck, shit;
+			int end, start;
 			int loopStart;
       // errs() << bblist.size() ;
-			for (fuck = 0; fuck < bblist.size(); fuck++)
+			for (end = 0; end < bblist.size(); end++)
 			{
-				TerminatorInst *tI = bblist[fuck]->getTerminator();
+				TerminatorInst *tI = bblist[end]->getTerminator();
 				if (BranchInst *bi = dyn_cast<BranchInst>(tI))
 				{
-					for (shit = 0; shit < fuck; shit++)
+					for (start = 0; start < end; start++)
 					{
 						for (int i = 0; i < bi->getNumSuccessors(); i++)
 						{
 							BasicBlock *successor = bi->getSuccessor(i);
-							if (successor == bblist[shit])
+							if (successor == bblist[start])
 							{
 								// errs() << "comparison successful\n";
 								loopStart = shit;
-								// errs() << fuck << " " << shit << "\n";
-								loop = makeSlice(bblist, shit, fuck);
+								// errs() << end << " " << start << "\n";
+								loop = makeSlice(bblist, start, end);
 								break;
 							}
 						}
@@ -292,7 +292,7 @@ namespace {
           			// 			errs() << "Instruction is being used as a Use, can not transfer to Save set\n";
           			// 		}
              //  // else{
-             //  //   errs() << "FUCKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKlol\n";
+             
              //  // }
 
           			// 	}
