@@ -165,7 +165,7 @@ namespace {
 							if (successor == bblist[start])
 							{
 								// errs() << "comparison successful\n";
-								loopStart = shit;
+								loopStart = start;
 								// errs() << end << " " << start << "\n";
 								loop = makeSlice(bblist, start, end);
 								break;
